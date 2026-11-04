@@ -48,3 +48,7 @@ rows whose move exceeded k (leakage gate: > 65% fails).
 | 56ac49af | 1h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal | long_short | - | - | 446 | +0.0% | +6.4% | +15.3% | +25.1% | 0.37 | 52.8% | stage2 B no-funding |
 | 8959f1c5 | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | Y | - | 575 | -0.2% | -36.5% | -31.0% | -24.9% | -1.96 | 54.0% | stage2 C regime |
 | b06cd0c5 | 1h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | Y | 423 | +0.1% | +20.0% | +29.4% | +39.7% | 1.01 | 53.4% | stage2 B nested tuning |
+| 09511fb2 | 1h | 1.0% | ensemble | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 130 | +0.2% | +8.6% | +11.1% | +13.7% | 0.77 | 54.7% | stage2 C ensemble |
+| cc0a3a4e | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | Y | 137 | +0.1% | +3.8% | +6.3% | +8.9% | 0.48 | 54.7% | stage2 C nested tuning |
+| bfe9e314 | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_only | - | - | 241 | -0.2% | -12.9% | -9.3% | -5.5% | -0.73 | 54.0% | stage2 C long-only |
+| 62360f98 | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal | long_short | - | - | 125 | +0.1% | +3.8% | +6.2% | +8.7% | 0.51 | 55.3% | stage2 C no-funding |

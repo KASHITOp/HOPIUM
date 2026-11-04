@@ -17,3 +17,8 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 | 2026-11-04 | db-check 6/7: secrets OK, REST 200, all 4 tables with expected columns. Catalog checks pending `hopium_schema_report()` (migration 20261104010000) | ml/ops/db_check.json |
 | 2026-11-04 | Workflows accept either secret pair: SUPABASE_URL or SUPABASE_PROJECT_LINK; SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ROLE_SERVICE_KEY | Owner's brief and screenshot named them differently |
 | 2026-11-04 | DB verified 24/24 (tables, columns, constraints, immutability triggers, RLS, SELECT-only public policies, no anon writes) | ml/ops/db_check.json |
+| 2026-11-04 | Final config = a2dedaa2 (12h, k=1%, logreg, all groups incl. funding, long+short) | Pre-agreed rule: best net @0.2% among >=150 trades, >=2/3 coins positive, majority of years positive. Only 9 of 39 configs qualified; this one +91.0% walk-forward |
+| 2026-11-04 | Deribit funding kept | Removing it: walk-forward +91.0% -> +42.8% (stage2 A no-funding) |
+| 2026-11-04 | Holdout run once: 0 trades, net 0.0% => ship rule C "Does not beat trading fees in testing." | Threshold picked on Feb-Apr 2026 found nothing profitable, so the model sat out all of 2026-05-01..2026-11-03 |
+| 2026-11-04 | Live bundle v3-12h-logreg-20261104 trained on all data, threshold 0.16 from the last 90 days (protocol), fallback not needed | Live product needs forward evidence; disclosed in RESULTS.md that this threshold used holdout-period data and is not a holdout result |
+| 2026-11-04 | Live engine predicts the 12h horizon only (one model) | Only the chosen config ships; 1h/4h v2 models retired |

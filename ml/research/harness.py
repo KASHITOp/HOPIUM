@@ -18,15 +18,13 @@ import json
 import time
 from dataclasses import asdict, dataclass, field
 
-import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
 
 from hopium.config import COINS, DATA, ROOT
 from hopium.features import add_labels
 from hopium.features_v3 import GROUPS, build_v3
+from hopium.model import EngineModel
 
 HOLDOUT_START = pd.Timestamp("2026-05-01", tz="UTC")
 TEST_MONTHS = pd.period_range("2024-09", "2026-04", freq="M")
@@ -91,34 +89,14 @@ def label3(move: np.ndarray, k: float) -> np.ndarray:
 
 
 # ----------------------------------------------------------------------------- models
-class LogReg:
-    def fit(self, X, y):
-        self.med = X.median()
-        self.sc = StandardScaler().fit(X.fillna(self.med))
-        self.m = LogisticRegression(C=0.05, max_iter=400).fit(self.sc.transform(X.fillna(self.med)), y)
-        return self
-
-    def predict_proba(self, X):
-        return self.m.predict_proba(self.sc.transform(X.fillna(self.med)))
-
-
-def make_lgbm(params):
-    base = dict(objective="multiclass", num_class=3, learning_rate=0.03, n_estimators=250,
-                feature_fraction=0.7, bagging_fraction=0.7, bagging_freq=1, lambda_l2=10.0,
-                verbose=-1, n_jobs=2)
-    return lgb.LGBMClassifier(**(base | params))
+def fit_model(cfg: Config, train: pd.DataFrame, lgbm_params=None) -> EngineModel:
+    X, y = train[cfg.features()], label3(train.fwd_move.to_numpy(), cfg.k)
+    return EngineModel(cfg.model, lgbm_params or cfg.lgbm).fit(X, y)
 
 
 def fit_predict(cfg: Config, train: pd.DataFrame, test: pd.DataFrame, lgbm_params=None) -> np.ndarray:
-    X, y = train[cfg.features()], label3(train.fwd_move.to_numpy(), cfg.k)
-    Xt = test[cfg.features()]
-    out = []
-    if cfg.model in ("lgbm", "ensemble"):
-        m = make_lgbm(lgbm_params or cfg.lgbm).fit(X, y, categorical_feature=["coin_id"])
-        out.append(m.predict_proba(Xt))
-    if cfg.model in ("logreg", "ensemble"):
-        out.append(LogReg().fit(X, y).predict_proba(Xt))
-    return np.mean(out, axis=0)   # columns: P(BIG_DOWN), P(NOTHING), P(BIG_UP)
+    """columns: P(BIG_DOWN), P(NOTHING), P(BIG_UP)"""
+    return fit_model(cfg, train, lgbm_params).predict_proba(test[cfg.features()])
 
 
 # ----------------------------------------------------------------------------- trading

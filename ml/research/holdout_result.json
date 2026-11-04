@@ -1,0 +1,37 @@
+{
+ "key": "a2dedaa2",
+ "config": {
+  "h": 12,
+  "k": 0.01,
+  "model": "logreg",
+  "groups": [
+   "base",
+   "flow",
+   "mtf",
+   "volreg",
+   "cross",
+   "cal",
+   "fund"
+  ],
+  "sides": "long_short",
+  "regime": false,
+  "tune": false,
+  "lgbm": {
+   "num_leaves": 15,
+   "min_child_samples": 300
+  },
+  "note": "stage1 grid"
+ },
+ "threshold": null,
+ "cells": null,
+ "params": {
+  "num_leaves": 15,
+  "min_child_samples": 300
+ },
+ "holdout": "2026-05-01 00:00:00+00:00 .. 2026-11-03 19:00:00+00:00",
+ "rows": 13452,
+ "trades": 0,
+ "net_0.20%": 0.0,
+ "net_0.15%": 0.0,
+ "net_0.10%": 0.0
+}
