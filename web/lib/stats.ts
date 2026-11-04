@@ -123,3 +123,10 @@ export function pctFloor(x: number, digits = 1): string {
   const f = 10 ** digits;
   return `${(Math.floor(x * 100 * f) / f).toFixed(digits)}%`;
 }
+
+/** Upper bounds of intervals round UP so the printed interval is never narrower than the real one. */
+export function pctCeil(x: number, digits = 1): string {
+  if (!Number.isFinite(x)) return "n/a";
+  const f = 10 ** digits;
+  return `${(Math.ceil(x * 100 * f) / f).toFixed(digits)}%`;
+}
