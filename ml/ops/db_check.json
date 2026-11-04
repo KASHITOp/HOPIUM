@@ -1,13 +1,43 @@
 {
- "checked_at": "2026-11-04T09:10:30.896134+00:00",
+ "checked_at": "2026-11-04T09:15:08.514021+00:00",
  "checks": [
   {
    "check": "secrets present",
+   "pass": true,
+   "detail": "project link recognised"
+  },
+  {
+   "check": "REST reachable with service key",
+   "pass": true,
+   "detail": "HTTP 200"
+  },
+  {
+   "check": "table predictions + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "table run_log + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "table model_runs + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "table candles_cache + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "hopium_schema_report() installed",
    "pass": false,
-   "detail": "SUPABASE_URL EMPTY, SUPABASE_SERVICE_ROLE_KEY EMPTY; other non-empty SUPABASE*/ALT_* env vars: []. Secrets must be repository Actions secrets (environment-scoped secrets are not visible to this job)."
+   "detail": "run supabase/migrations/20261104010000_schema_report.sql to enable catalog checks"
   }
  ],
  "ok": false,
- "passed": 0,
- "total": 1
+ "passed": 6,
+ "total": 7
 }
