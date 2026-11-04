@@ -1,7 +1,7 @@
 {
  "job": "predict",
  "candle_close_time": "2026-11-04T11:00:00+00:00",
- "started_minutes_after_close": 1.95,
+ "started_minutes_after_close": 4.16,
  "dry_run": false,
  "rows": [
   {
@@ -51,12 +51,8 @@
   }
  ],
  "status": "ok",
- "inserted": 3,
- "already_existed": 0,
- "inserted_minutes_after_close": 2.22,
- "ids": [
-  1,
-  2,
-  3
- ]
+ "inserted": 0,
+ "already_existed": 3,
+ "inserted_minutes_after_close": 4.4,
+ "ids": []
 }
