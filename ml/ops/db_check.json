@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-11-04T10:19:52.475614+00:00",
+ "checked_at": "2026-11-04T14:04:35.775504+00:00",
  "checks": [
   {
    "check": "secrets present",
@@ -197,6 +197,7 @@
      "hit_matches_outcome",
      "inserted_after_close",
      "inserted_on_time",
+     "lifecycle_order",
      "move_matches_prices",
      "outcome_matches_move",
      "predictions_coin_check",
@@ -212,6 +213,7 @@
      "predictions_score_check",
      "predictions_signal_check",
      "predictions_threshold_check",
+     "provenance_is_live",
      "signal_matches_prob",
      "target_matches_horizon"
     ],
@@ -240,7 +242,7 @@
      "candles_cache_pkey"
     ],
     "rls_enabled": true,
-    "row_estimate": -1,
+    "row_estimate": 225,
     "anon_privileges": [
      "REFERENCES",
      "SELECT",
@@ -254,7 +256,7 @@
    "predictions_before_insert",
    "predictions_before_update"
   ],
-  "checked_at": "2026-11-04T10:19:53.396494+00:00",
+  "checked_at": "2026-11-04T14:04:37.300804+00:00",
   "server_version": "17.11"
  },
  "passed": 24,
