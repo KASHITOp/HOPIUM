@@ -19,7 +19,13 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python ml/hopium/db_check.py
+          ALT_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ALT_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          # diagnostics only: lengths, never values
+          echo "SUPABASE_URL len=${#SUPABASE_URL}; SUPABASE_SERVICE_ROLE_KEY len=${#SUPABASE_SERVICE_KEY}; SUPABASE_SERVICE_KEY len=${#ALT_SERVICE_KEY}; SUPABASE_KEY len=${#ALT_KEY}"
+          if [ -z "$SUPABASE_SERVICE_KEY" ] && [ -n "$ALT_SERVICE_KEY" ]; then export SUPABASE_SERVICE_KEY="$ALT_SERVICE_KEY"; fi
+          python ml/hopium/db_check.py
       - name: Commit result
         if: always()
         run: |

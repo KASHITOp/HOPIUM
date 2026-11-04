@@ -42,7 +42,10 @@ def main() -> int:
         res["checks"].append({"check": name, "pass": bool(passed), "detail": detail})
 
     if not URL or not KEY:
-        check("secrets present", False, "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing")
+        check("secrets present", False,
+              f"SUPABASE_URL {'set' if URL else 'EMPTY'}, SUPABASE_SERVICE_ROLE_KEY {'set' if KEY else 'EMPTY'}; "
+              f"other non-empty SUPABASE*/ALT_* env vars: {sorted(k for k in os.environ if k.startswith(('SUPABASE', 'ALT_')) and os.environ[k])}. "
+              "Secrets must be repository Actions secrets (environment-scoped secrets are not visible to this job).")
         return finish(res)
     check("secrets present", True)
     # 1) tables + columns via PostgREST OpenAPI (read-only)
