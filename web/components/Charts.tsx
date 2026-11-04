@@ -67,3 +67,43 @@ export function CalibrationChart({ bins, label }: { bins: { predicted: number; a
     </svg>
   );
 }
+
+/** Monthly bars. Positive months hatched ink, negative months outlined in faded ink, no-trade months marked. */
+export function MonthBars({ months, label }: { months: { month: string; v: number; trades: number }[]; label: string }) {
+  const W = 640, H = 220, L = 44, R = 8, T = 12, B = 34;
+  const max = Math.max(0.05, ...months.map((m) => Math.abs(m.v)));
+  const bw = (W - L - R) / months.length;
+  const y = (v: number) => T + (1 - (v + max) / (2 * max)) * (H - T - B);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label}>
+      <defs>
+        <pattern id="mb-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="5" stroke="#D6CEBD" strokeWidth="2" />
+        </pattern>
+      </defs>
+      {[-max, 0, max].map((v) => (
+        <g key={v}>
+          <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke={v === 0 ? "#8F897C" : "#3A362E"} />
+          <text x={L - 6} y={y(v) + 3} textAnchor="end" fontSize="10" fill="#8F897C" fontFamily={F}>{v > 0 ? "+" : ""}{Math.round(v * 100)}%</text>
+        </g>
+      ))}
+      {months.map((m, i) => {
+        const x = L + i * bw + 2;
+        const top = Math.min(y(m.v), y(0));
+        const h = Math.abs(y(m.v) - y(0));
+        return (
+          <g key={m.month}>
+            {m.trades === 0 ? (
+              <text x={x + bw / 2 - 2} y={y(0) - 4} textAnchor="middle" fontSize="9" fill="#6E695F" fontFamily={F}>.</text>
+            ) : m.v >= 0 ? (
+              <rect x={x} y={top} width={bw - 4} height={Math.max(1, h)} fill="url(#mb-hatch)" stroke="#D6CEBD" strokeWidth="1" />
+            ) : (
+              <rect x={x} y={top} width={bw - 4} height={Math.max(1, h)} fill="none" stroke="#8F897C" strokeWidth="1.2" />
+            )}
+            {i % 3 === 0 && <text x={x + (bw - 4) / 2} y={H - 18} textAnchor="middle" fontSize="9" fill="#8F897C" fontFamily={F}>{m.month.slice(2)}</text>}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
