@@ -35,3 +35,53 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 ## WAITING ON KARTAVYAA
 
 Nothing right now. (Vercel scope approved; migration 0003 applied, both verified.)
+
+## E3 hard-ban checklist (checked against the code with grep + visual review of every page)
+
+| Ban | Result |
+|---|---|
+| harsh gradients | pass (none; slips are flat colour + noise PNG) |
+| lucide or any stock icon set | pass (components/Icons.tsx, hand-drawn) |
+| white or light backgrounds | pass (lightest colour on the site is #D6CEBD text) |
+| rainbow colours | pass (9-token palette only) |
+| drop shadows | pass (none; separation by rules and spacing) |
+| 3 feature cards in a row | fixed (coins are ledger rows, not cards) |
+| emojis | pass (0 found) |
+| glassmorphism / blur | pass |
+| em dashes in site copy | pass (0 found) |
+| Inter, Geist, Space Grotesk | pass (Bricolage Grotesque + IBM Plex Mono only, self-hosted) |
+| coloured left stripe on cards | pass |
+| fake testimonials / user counts | pass |
+| bento grids | pass |
+| fake terminal windows | pass |
+| "It's not X, it's Y" copy | pass |
+| checkmark bullet lists | pass |
+| pricing tiers | pass (no pricing) |
+| stock product images | pass (real receipts are the demo) |
+| soft rounded corners | pass (radius 0 to 2px in Tailwind config) |
+| purple | pass (removed with the old prototype) |
+| missing skeleton loaders | pass (receipt-shaped skeletons on home, receipts, portfolio, lab) |
+| radial orbs / blobs, dot grids | pass |
+| sparkle icons, bouncing arrows | pass |
+| missing Terms / Privacy | pass (/terms, /privacy, /disclaimer) |
+| decorative hover lifts / scales | pass (hover changes underline only) |
+| neon or glow | pass |
+| pastel palettes | pass |
+| banned words (AI-powered, revolutionary, unlock, supercharge, seamless, game-changer, sure-shot, guaranteed) | pass (0 found) |
+| any white or light background | pass |
+| any glow / neon on dark | pass |
+
+## WCAG AA contrast (computed; scratchpad script, WCAG 2.1 relative luminance)
+
+| Text colour | on #13120F counter | on #1E1C18 slip | Use |
+|---|---|---|---|
+| ink #D6CEBD | 11.97 | 10.87 | body text |
+| faded #8F897C | 5.39 | 4.89 | secondary text |
+| red #D4614C (from #D25A44) | 5.01 | 4.55 | misses, DOWN, alerts |
+| green #6FA27E | 6.37 | 5.79 | hits, UP |
+| blue #7D9BCB | 6.62 | 6.01 | links, focus ring |
+| pencil #6E695F | 3.43 | 3.12 | stamps and large UI only (3:1) |
+| pencilText #898377 (pencil hue, lighter) | 4.97 | 4.52 | small pencil text |
+
+Fixes: stamp red #D25A44 measured 4.28:1 on slip, lightened within its hue to #D4614C. Pencil #6E695F is below 4.5:1, so
+small text uses #898377 and #6E695F is kept for stamps (large, decorative). Rule #3A362E is for lines only, never text.

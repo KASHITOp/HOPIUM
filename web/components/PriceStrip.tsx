@@ -68,19 +68,19 @@ export function PriceStrip() {
 
   return (
     <div className="border-y border-rule">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-1 px-4 py-2 text-[12px]" aria-live="off">
+      <div className="mx-auto flex h-[58px] max-w-6xl flex-wrap content-center items-center gap-x-6 gap-y-1 overflow-hidden px-4 text-[12px] sm:h-[36px] sm:flex-nowrap" aria-live="off">
         {COINS.map((c) => {
           const p = px[c];
           const ch = p?.open24 ? p.price / p.open24 - 1 : null;
           return (
-            <span key={c} className="flex items-baseline gap-2">
+            <span key={c} className="flex w-[104px] items-baseline gap-2 whitespace-nowrap sm:w-[190px]">
               <span className="text-faded">{c}</span>
               <span className="text-ink">{p ? p.price.toLocaleString("en-US", { maximumFractionDigits: p.price > 1000 ? 0 : 2 }) : "......"}</span>
-              {ch !== null && <span className={ch >= 0 ? "text-green" : "text-red"}>{ch >= 0 ? "+" : "−"}{Math.abs(ch * 100).toFixed(2)}% 24h</span>}
+              {ch !== null && <span className={`hidden sm:inline ${ch >= 0 ? "text-green" : "text-red"}`}>{ch >= 0 ? "+" : "−"}{Math.abs(ch * 100).toFixed(2)}% 24h</span>}
             </span>
           );
         })}
-        <span className="label ml-auto">
+        <span className="label basis-full whitespace-nowrap sm:ml-auto sm:basis-auto">
           {source === "connecting" ? "connecting to tape" : source === "offline" ? "tape offline, retrying" : `live tape: ${source}, display only`}
         </span>
       </div>
