@@ -106,3 +106,37 @@ Earlier build (Google Fonts stylesheet): /receipts 83 performance; fixed by next
 
 Decision: Vercel ignored-build-step now builds only `main` and `demo`, and only when `web/` changed (branch pushes and
 hourly bot commits were burning the free deployment quota).
+
+## FINAL REPORT
+
+- **Live URL:** https://hopium-phi.vercel.app (production, public). Demo preview with labelled DEMO DATA:
+  https://hopium-git-demo-kartavyaas-projects.vercel.app (Vercel login required; previews are protected).
+- **Model label: C, "Does not beat trading fees in testing."** Chosen config a2dedaa2 (12h, k = 1%, logistic regression,
+  all live features incl. Deribit funding, long + short). Walk-forward Sep 2024 to Apr 2026: +91.0% after 0.2% fees,
+  988 trades, win rate 49.8%, Sharpe 1.27 (95% CI 0.02 to 2.50), max drawdown 23.1%. Locked holdout May to Nov 2026:
+  0 trades, net 0.0%. Rule C because holdout net P&L <= 0. 39 configs tried.
+- **What is live:** hourly predict + grade + candle cache from main (cron at :02, plus a manual kick via ml/ops/run-now);
+  late starts are skipped and logged (verified: 10:00 candle skipped at 22.1 min); weekly retrain with leakage gate;
+  keepalive; db-check (24/24). Website on Vercel bom1 reading Supabase with the publishable key.
+- **What is mocked:** nothing on production. The `demo` branch preview runs on DEMO DATA and says so on every page.
+- **SQL still to run:** none.
+- **Things to click:** none required. Optional: enable Vercel Web Analytics in the project settings (the Privacy Policy
+  already discloses it; the script is installed but only records once enabled).
+- **Known limitations:** the model's edge faded in 2026, so most hours print NO CALL; GitHub cron can start late, which
+  produces "printer jammed" hours by design; Vercel free tier limits deployments per day; Deribit open interest has no
+  history, so OI is not a feature; share images fetch IBM Plex Mono from Google at render time and fall back to the
+  default font if that fails.
+- **Next 3 things:** (1) run an always-on collector (e.g. a Mumbai-region edge function) for exchange funding and open
+  interest so a real history accumulates; (2) after 60+ days of live receipts, compare live calibration with walk-forward
+  and retire or re-select the config by the same pre-registered rule; (3) add regime detection trained across more than
+  one market cycle before trusting any trading edge.
+
+**Resume bullet (3 lines):**
+Built HOPIUM, a public crypto forecaster whose every prediction is stored before its outcome and graded automatically;
+Postgres constraints and triggers make receipts immutable and reject late or rule-breaking inserts. Ran 39 configurations
+through nested walk-forward validation with a locked 6-month holdout, and published the result honestly: it does not beat fees.
+
+**LinkedIn (2 sentences):**
+I built HOPIUM, a crypto direction forecaster that publishes every call before the outcome and grades itself in public,
+with Python, GitHub Actions, Supabase and Next.js. Its walk-forward backtest beat trading fees, the untouched 6-month holdout
+did not, and the site says exactly that.
