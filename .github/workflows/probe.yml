@@ -1,6 +1,10 @@
 name: probe-data-sources
 # Which data sources answer from a GitHub-hosted (US) runner? Run manually; results go in ml/DATA.md.
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/hopium-engine-v3]
+    paths: [.github/workflows/probe.yml]
 jobs:
   probe:
     runs-on: ubuntu-latest
