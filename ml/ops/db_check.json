@@ -1,10 +1,10 @@
 {
- "checked_at": "2026-11-04T09:09:32.236024+00:00",
+ "checked_at": "2026-11-04T09:10:30.896134+00:00",
  "checks": [
   {
    "check": "secrets present",
    "pass": false,
-   "detail": "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing"
+   "detail": "SUPABASE_URL EMPTY, SUPABASE_SERVICE_ROLE_KEY EMPTY; other non-empty SUPABASE*/ALT_* env vars: []. Secrets must be repository Actions secrets (environment-scoped secrets are not visible to this job)."
   }
  ],
  "ok": false,
