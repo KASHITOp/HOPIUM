@@ -1,8 +1,62 @@
 {
  "job": "predict",
- "candle_close_time": "2026-11-04T10:00:00+00:00",
- "started_minutes_after_close": 22.13,
+ "candle_close_time": "2026-11-04T11:00:00+00:00",
+ "started_minutes_after_close": 1.95,
  "dry_run": false,
- "status": "missed",
- "detail": "started 22.1 min after candle close; skipped, never backfilled"
+ "rows": [
+  {
+   "coin": "BTC",
+   "horizon": "12h",
+   "prob_up": 0.206422,
+   "signal": "NO_CALL",
+   "price_at_call": 78608.86,
+   "candle_close_time": "2026-11-04T11:00:00+00:00",
+   "target_time": "2026-11-04T23:00:00+00:00",
+   "model_version": "v3-12h-logreg-20261104",
+   "p_big_up": 0.206422,
+   "p_big_down": 0.180944,
+   "score": 0.025478,
+   "threshold": 0.16,
+   "k": 0.01
+  },
+  {
+   "coin": "ETH",
+   "horizon": "12h",
+   "prob_up": 0.271011,
+   "signal": "NO_CALL",
+   "price_at_call": 2328.34,
+   "candle_close_time": "2026-11-04T11:00:00+00:00",
+   "target_time": "2026-11-04T23:00:00+00:00",
+   "model_version": "v3-12h-logreg-20261104",
+   "p_big_up": 0.271011,
+   "p_big_down": 0.24229,
+   "score": 0.028721,
+   "threshold": 0.16,
+   "k": 0.01
+  },
+  {
+   "coin": "SOL",
+   "horizon": "12h",
+   "prob_up": 0.337843,
+   "signal": "NO_CALL",
+   "price_at_call": 93.61,
+   "candle_close_time": "2026-11-04T11:00:00+00:00",
+   "target_time": "2026-11-04T23:00:00+00:00",
+   "model_version": "v3-12h-logreg-20261104",
+   "p_big_up": 0.337843,
+   "p_big_down": 0.303276,
+   "score": 0.034567,
+   "threshold": 0.16,
+   "k": 0.01
+  }
+ ],
+ "status": "ok",
+ "inserted": 3,
+ "already_existed": 0,
+ "inserted_minutes_after_close": 2.22,
+ "ids": [
+  1,
+  2,
+  3
+ ]
 }
