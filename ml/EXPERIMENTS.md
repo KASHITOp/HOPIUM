@@ -45,3 +45,4 @@ rows whose move exceeded k (leakage gate: > 65% fails).
 | fa2533d3 | 1h | 0.5% | ensemble | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 456 | +0.1% | +8.5% | +17.8% | +28.3% | 0.45 | 53.1% | stage2 B ensemble |
 | dfd76f0a | 1h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | Y | - | 523 | +0.0% | +4.3% | +14.1% | +25.1% | 0.27 | 53.3% | stage2 B regime |
 | 6fa5c4d9 | 1h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_only | - | - | 241 | +0.2% | +16.4% | +21.3% | +26.5% | 1.21 | 53.3% | stage2 B long-only |
+| 56ac49af | 1h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal | long_short | - | - | 446 | +0.0% | +6.4% | +15.3% | +25.1% | 0.37 | 52.8% | stage2 B no-funding |
