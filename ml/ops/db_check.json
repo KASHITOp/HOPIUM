@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-11-04T09:32:40.303430+00:00",
+ "checked_at": "2026-11-04T09:33:38.531454+00:00",
  "checks": [
   {
    "check": "secrets present",
@@ -123,6 +123,7 @@
   }
  ],
  "ok": false,
+ "api_url": "https://pnctzcczifowlhdchdhg.supabase.co",
  "report": {
   "tables": {
    "run_log": {
@@ -248,7 +249,7 @@
    "predictions_before_insert",
    "predictions_before_update"
   ],
-  "checked_at": "2026-11-04T09:32:42.341256+00:00",
+  "checked_at": "2026-11-04T09:33:39.745086+00:00",
   "server_version": "17.11"
  },
  "passed": 23,
