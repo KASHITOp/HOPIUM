@@ -51,6 +51,7 @@ def main() -> int:
               f"other non-empty SUPABASE*/ALT_* env vars: {sorted(k for k in os.environ if k.startswith(('SUPABASE', 'ALT_')) and os.environ[k])}. "
               "Secrets must be repository Actions secrets (environment-scoped secrets are not visible to this job).")
         return finish(res)
+    res["api_url"] = URL if URL.endswith(".supabase.co") else None   # public project URL (not a secret)
     check("secrets present", True, "project link recognised" if URL.endswith('.supabase.co') else "link not recognised as a Supabase project")
     # 1) tables + columns via PostgREST OpenAPI (read-only)
     r = requests.get(f"{URL}/rest/v1/", headers=H, timeout=30)
