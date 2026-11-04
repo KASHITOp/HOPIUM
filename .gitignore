@@ -7,3 +7,5 @@ node_modules/
 .env*
 !.env.example
 .vercel
+ml/research/*.log
+ml/research/__pycache__/

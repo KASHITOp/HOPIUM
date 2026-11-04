@@ -20,6 +20,7 @@ from .config import BINANCE_HOSTS, COINBASE, COINS, DATA, HISTORY_DAYS
 S = requests.Session()
 S.headers["User-Agent"] = "hopium-ml/2.0 (+https://github.com/kashitop/hopium)"
 COLS = ["ts", "open", "high", "low", "close", "volume"]
+FLOW = ["quote_volume", "trades", "taker_buy_base"]   # Binance-only order-flow fields
 
 
 def _get(url, params=None, tries=4):
@@ -52,9 +53,9 @@ def binance_klines(coin: str, start: pd.Timestamp, end: pd.Timestamp | None = No
                 if len(batch) < 1000:
                     break
                 cur = batch[-1][0] + 3_600_000
-            df = pd.DataFrame([r[:6] for r in rows], columns=COLS)
+            df = pd.DataFrame([r[:6] + [r[7], r[8], r[9]] for r in rows], columns=COLS + FLOW)
             df["ts"] = pd.to_datetime(df.ts.astype("int64"), unit="ms", utc=True)
-            df[COLS[1:]] = df[COLS[1:]].astype(float)
+            df[COLS[1:] + FLOW] = df[COLS[1:] + FLOW].astype(float)
             return _closed_only(df)
         except Exception as e:
             last_err = e
@@ -75,6 +76,8 @@ def coinbase_klines(coin: str, start: pd.Timestamp) -> pd.DataFrame:
     df = pd.DataFrame(rows, columns=["ts", "low", "high", "open", "close", "volume"])[COLS]
     df["ts"] = pd.to_datetime(df.ts.astype("int64"), unit="s", utc=True)
     df[COLS[1:]] = df[COLS[1:]].astype(float)
+    for f in FLOW:
+        df[f] = float("nan")       # Coinbase has no order-flow fields
     return _closed_only(df)
 
 
