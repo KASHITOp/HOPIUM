@@ -1,8 +1,8 @@
 {
  "job": "predict",
- "candle_close_time": "2026-11-04T17:00:00+00:00",
- "started_minutes_after_close": 50.16,
+ "candle_close_time": "2026-11-04T23:00:00+00:00",
+ "started_minutes_after_close": 23.39,
  "dry_run": false,
  "status": "missed",
- "detail": "started 50.2 min after candle close; skipped, never backfilled"
+ "detail": "started 23.4 min after candle close; skipped, never backfilled"
 }
