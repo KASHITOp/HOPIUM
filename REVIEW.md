@@ -140,3 +140,22 @@ through nested walk-forward validation with a locked 6-month holdout, and publis
 I built HOPIUM, a crypto direction forecaster that publishes every call before the outcome and grades itself in public,
 with Python, GitHub Actions, Supabase and Next.js. Its walk-forward backtest beat trading fees, the untouched 6-month holdout
 did not, and the site says exactly that.
+
+## Live verification (2026-11-04)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Late run skipped and logged | pass: 10:00 candle, started 22.1 min late, status missed, nothing inserted | ml/ops/last_predict.json @ 10:22 |
+| First live predictions | pass: ids 1-3 (BTC/ETH/SOL 12h, all NO_CALL, scores +0.025/+0.029/+0.035 vs 0.16), inserted 2.2 min after the 11:00 close | ml/ops/last_predict.json @ 11:02 |
+| Idempotency | pass: re-run for the 11:00 candle at 4.2 min inserted 0, already_existed 3 | ml/ops/last_predict.json @ 11:04 |
+| Site shows live rows | pass: receipts #1-#3 on / and in /receipts/csv | production HTML |
+| First grading | pending: target_time 23:00 UTC; any hourly run after that grades them (grade.py runs every hour) | to verify next session |
+
+## Scheduler: GitHub cron did not fire (2026-11-04)
+
+- hourly.yml has been on the default branch (main) of a public repo since 09:33 UTC with `cron: "2 * * * *"`. By 13:21 UTC
+  GitHub had created **0** runs with event `schedule` (Actions API: all 3 runs were `push`). No error is shown anywhere;
+  GitHub documents that scheduled events can be delayed or dropped and gives no SLA.
+- Decision: keep the cron (it costs nothing if it starts working) and add `.github/workflows/heartbeat.yml`, a
+  self-chaining fallback: sleep until HH:02, dispatch hourly.yml, dispatch itself. Only one chain runs at a time, and it
+  retires as soon as a `schedule` run appears in the last 3 hours. Manual kick via ml/ops/run-now stays as a last resort.
