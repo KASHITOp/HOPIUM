@@ -28,7 +28,7 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 
 ## SQL I must run
 
-1. `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor. Until then the live predict job
+1. DONE (applied by owner, db-check 24/24): `supabase/migrations/20261104020000_engine_v3.sql`. Until then the live predict job
    logs a constraint error every hour (nothing bad is written). db-check will report the new columns as missing.
 | 2026-11-04 | Merged claude/hopium-engine-v3 into main with a merge commit via git (no force push) | GitHub API tool returned 'invalid session' for create_pull_request; owner pre-approved the merge |
 
@@ -197,3 +197,28 @@ CLS went from 0.182 to 0 on Home and Receipts once the reserved-height price str
 ## SQL I must run (trust v1)
 
 1. `supabase/migrations/20261105000000_trust_v1.sql` in the Supabase SQL editor (additive; no rows touched).
+
+
+## Status at end of final session (2026-11-04 14:05 UTC)
+
+**Verified live**
+- Hourly predict through the heartbeat fallback: 14:02 heartbeat dispatched hourly.yml; 14:00 candle rows 7-9 inserted
+  2.8 min after close; heartbeat run #2 dispatched itself (event workflow_dispatch by github-actions[bot]).
+- Late-run skip (10:00 candle), idempotency (11:00 re-run inserted 0), site serving live rows.
+- Production deploy 909ba29+ includes sit-out gauges, activity counter, receipts empty state, /maker, credits,
+  1200x627 share images; CLS 0 on Home, Receipts, Maker (Lighthouse mobile).
+- Combined main after PR #1 (trust v1): web lint/typecheck clean, 49 Vitest, build OK; ml 44 pytest; supabase 40 schema tests.
+
+**Pending**
+- First grading of rows #1-3 at 23:00 UTC: a check-in is scheduled for 23:20 UTC to verify price_at_target, outcome
+  (SAT_OUT expected, all three were NO_CALL) and graded_at, and record it here.
+- GitHub's own `schedule` trigger: still 0 events. The heartbeat retires itself automatically if it ever starts.
+- Trust v1 migration `supabase/migrations/20261105000000_trust_v1.sql` (from PR #1) is waiting to be run by the owner.
+
+**Next 3 improvements**
+1. Always-on collector for exchange funding and open interest (e.g. a Mumbai-region edge function), so a real history
+   exists to train on.
+2. After 60+ days of live receipts, compare live calibration against walk-forward and re-select by the same
+   pre-registered rule.
+3. Move the scheduler off GitHub entirely (Supabase pg_cron calling a workflow_dispatch webhook) once a scoped token
+   can be stored as a Supabase secret.
