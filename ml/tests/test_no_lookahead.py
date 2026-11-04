@@ -74,7 +74,7 @@ def test_perturbation_actually_changes_the_future():
 
 def test_live_window_matches_full_history():
     """predict.py builds features from a short recent window; it must equal the training pipeline's row."""
-    from hopium.predict import LOOKBACK_H
+    LOOKBACK_H = 400  # v2 feature window (v2 features are a subset of v3)
     candles, fng = synthetic()
     full = build(candles, fng)
     short = build({c: d.tail(LOOKBACK_H) for c, d in candles.items()}, fng)

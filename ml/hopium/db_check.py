@@ -22,7 +22,8 @@ H = {"apikey": KEY, "Authorization": f"Bearer {KEY}"}
 
 EXPECTED_COLUMNS = {
     "predictions": ["id", "coin", "horizon", "prob_up", "signal", "price_at_call", "candle_close_time", "inserted_at",
-                    "created_at", "target_time", "model_version", "price_at_target", "move", "outcome", "hit", "graded_at"],
+                    "created_at", "target_time", "model_version", "price_at_target", "move", "outcome", "hit", "graded_at",
+                    "p_big_up", "p_big_down", "score", "threshold", "k"],
     "run_log": ["id", "job", "candle_close_time", "status", "detail", "logged_at"],
     "model_runs": ["model_version", "trained_at", "oos_accuracy", "oos_n", "brier", "baseline_accuracy", "calibration",
                    "feature_importance", "backtest_equity", "details"],

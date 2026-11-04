@@ -22,3 +22,11 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 | 2026-11-04 | Holdout run once: 0 trades, net 0.0% => ship rule C "Does not beat trading fees in testing." | Threshold picked on Feb-Apr 2026 found nothing profitable, so the model sat out all of 2026-05-01..2026-11-03 |
 | 2026-11-04 | Live bundle v3-12h-logreg-20261104 trained on all data, threshold 0.16 from the last 90 days (protocol), fallback not needed | Live product needs forward evidence; disclosed in RESULTS.md that this threshold used holdout-period data and is not a holdout result |
 | 2026-11-04 | Live engine predicts the 12h horizon only (one model) | Only the chosen config ships; 1h/4h v2 models retired |
+| 2026-11-04 | Migration 20261104020000_engine_v3.sql (additive): 12h horizon, p_big_up/p_big_down/score/threshold/k, score-based signal constraint, immutability covers new columns. 31/31 PGlite schema tests | Needed so the DB enforces the v3 signal rule exactly like ml/hopium/engine.py |
+| 2026-11-04 | Grading unchanged: v3 calls are graded as direction calls (move > 0 for UP, < 0 for DOWN, FLAT if abs(move) < 0.1%); k only defines the training target | The call is a direction; profit after fees is shown separately per receipt |
+| 2026-11-04 | Hourly + retrain workflows commit ml/ops/last_predict.json / last_grade.json and model artifacts back to the branch | Owner instruction: read workflow results via git |
+
+## SQL I must run
+
+1. `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor. Until then the live predict job
+   logs a constraint error every hour (nothing bad is written). db-check will report the new columns as missing.

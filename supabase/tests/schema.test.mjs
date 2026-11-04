@@ -1,7 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import fs from "fs";
 const db = new PGlite();
-await db.exec(`create role anon; create role authenticated;`);
+await db.exec(`create role anon; create role authenticated; create role service_role;`);
 await db.exec(fs.readFileSync(new URL("../schema.sql", import.meta.url), "utf8"));
 // Test clock: "now" for inserts is controlled through a session setting.
 await db.exec(`create or replace function public.predictions_before_insert() returns trigger language plpgsql as $$
@@ -42,5 +42,19 @@ await t("anon cannot insert", [`set role anon`, ins({ coin: "SOL", close: base +
 await db.query(`reset role`);
 await t("missed run logged once", [`insert into run_log (job,candle_close_time,status) values ('predict','${iso(base)}','missed')`], true);
 await t("second predict log for same hour rejected", [`insert into run_log (job,candle_close_time,status) values ('predict','${iso(base)}','ok')`], false);
+
+// ---------------- engine v3 (score/threshold rule, 12h)
+const ins3 = ({ coin = "BTC", close = base + 20 * H, pu = 0.40, pd = 0.10, thr = 0.16, sig = "UP", h = "12h", tgtH = 12, score }) =>
+  `insert into predictions (coin,horizon,prob_up,signal,price_at_call,candle_close_time,target_time,model_version,p_big_up,p_big_down,score,threshold,k)
+   values ('${coin}','${h}',${pu},'${sig}',100,'${iso(close)}','${iso(close + tgtH * H)}','v3',${pu},${pd},${score ?? (pu - pd)},${thr},0.01)`;
+await t("v3 UP (score 0.30 > 0.16) accepted", [now(base + 20 * H + 60e3), ins3({})], true);
+await t("v3 UP below threshold rejected", [ins3({ coin: "ETH", pu: 0.2, pd: 0.1 })], false);
+await t("v3 NO_CALL inside band accepted", [ins3({ coin: "ETH", pu: 0.2, pd: 0.1, sig: "NO_CALL" })], true);
+await t("v3 DOWN (score -0.25) accepted", [ins3({ coin: "SOL", pu: 0.05, pd: 0.30, sig: "DOWN" })], true);
+await t("v3 score not equal p_up - p_down rejected", [now(base + 21 * H + 60e3), ins3({ score: 0.9, close: base + 21 * H })], false);
+await t("v3 12h with wrong target rejected", [ins3({ close: base + 21 * H, tgtH: 4 })], false);
+await t("v3 prob_up must equal p_big_up", [`insert into predictions (coin,horizon,prob_up,signal,price_at_call,candle_close_time,target_time,model_version,p_big_up,p_big_down,score,threshold,k)
+   values ('BTC','12h',0.9,'UP',100,'${iso(base + 21 * H)}','${iso(base + 33 * H)}','v3',0.4,0.1,0.3,0.16,0.01)`], false);
+await t("v3 threshold edit rejected", [`update predictions set threshold=0.01 where model_version='v3' and coin='BTC'`], false);
 console.log(`\n${ok} passed, ${bad} failed`);
 if (bad) process.exit(1);
