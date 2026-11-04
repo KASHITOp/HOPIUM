@@ -76,7 +76,8 @@ export function Watched({ rows, missed }: { rows: Prediction[]; missed: number }
   const calls = rows.filter((r) => r.signal !== "NO_CALL").length;
   const first = rows.reduce((a, r) => (r.candle_close_time < a ? r.candle_close_time : a), rows[0]!.candle_close_time);
   return (
-    <dl className="grid grid-cols-3 gap-4 border-b border-rule py-6" aria-label="Activity since launch">
+    <div className="border-b border-rule py-6">
+    <dl className="grid grid-cols-3 gap-4" aria-label="Activity since launch">
       {[
         ["hours watched", hours.toLocaleString("en-US")],
         [`calls made, of ${rows.length.toLocaleString("en-US")} coin-hours`, calls.toLocaleString("en-US")],
@@ -87,7 +88,8 @@ export function Watched({ rows, missed }: { rows: Prediction[]; missed: number }
           <dd className="display mt-1 text-[30px] text-ink sm:text-[40px]">{v}</dd>
         </div>
       ))}
-      <p className="col-span-3 text-[11px] text-faded">since the first live receipt, {first.slice(0, 10)} {first.slice(11, 16)} UTC. A coin-hour is one coin, one hourly check.</p>
     </dl>
+      <p className="mt-3 text-[11px] text-faded">since the first live receipt, {first.slice(0, 10)} {first.slice(11, 16)} UTC. A coin-hour is one coin, one hourly check.</p>
+    </div>
   );
 }

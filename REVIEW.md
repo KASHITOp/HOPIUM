@@ -174,3 +174,13 @@ did not, and the site says exactly that.
   stock icons; the three new link icons are hand-drawn glyphs, not brand logos). Contrast: new elements reuse the tokens
   already measured above (ink, faded, red 5.01:1 on counter, green 5.79:1 on slip): pass.
 - Checks: web lint clean, typecheck clean, 36 Vitest tests, production build OK; ml 34 pytest; supabase 31 schema tests.
+
+### Lighthouse after the CLS fix went live (mobile, production 909ba29)
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|
+| / | 97 | 96 (definition-list markup in the new counter; fixed in the next deploy) | 96 | 100 | 2.1 s | 0 |
+| /receipts | 99 | 100 | 96 | 100 | 2.2 s | 0 |
+| /maker | 100 | 100 | 96 | 100 | 1.9 s | 0 |
+
+CLS went from 0.182 to 0 on Home and Receipts once the reserved-height price strip deployed.
