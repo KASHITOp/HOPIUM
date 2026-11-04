@@ -1,0 +1,9 @@
+ml/data/
+ml/models/oos_*.parquet
+__pycache__/
+*.pyc
+node_modules/
+.next/
+.env*
+!.env.example
+.vercel
