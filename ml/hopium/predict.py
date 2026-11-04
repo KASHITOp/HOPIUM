@@ -51,6 +51,8 @@ def fetch_window(close: pd.Timestamp, tries: int = 5) -> dict[str, pd.DataFrame]
 
 
 def write_ops(res: dict):
+    if res.get("dry_run"):
+        return            # dry runs never touch the committed ops record
     OPS.parent.mkdir(exist_ok=True)
     OPS.write_text(json.dumps(res, indent=1, default=str))
 
