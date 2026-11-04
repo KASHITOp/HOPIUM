@@ -1,43 +1,74 @@
 /**
- * SIMULATED paper portfolio from graded live calls. Same rules as the research harness (ml/research/harness.py):
- * $1,000 split equally across BTC/ETH/SOL sleeves; each sleeve takes a call only when its previous trade has closed;
- * UP = long, DOWN = short (or skipped in "up only" mode); entry/exit = the graded 1h closes; 0.1% fee per side; no leverage.
+ * SIMULATED paper portfolio. Accounting, stated exactly (same rules as ml/research/harness.py `portfolio`):
+ *   capital    $1,000 split into three fixed sleeves of 1/3 (BTC, ETH, SOL). Never rebalanced, no leverage.
+ *   positions  at most one open trade per coin; a call arriving while that coin's trade is open is skipped (no overlap,
+ *              no double use of a sleeve's capital). A new trade may start at the same instant the previous one exits.
+ *   sizing     each trade uses the whole sleeve; sleeves compound their own trades.
+ *   shorts     return = -move (linear). Borrow/funding costs not modelled.
+ *   costs      fee per round trip (default 0.2%) plus 2 * slippage (default 0) subtracted from each trade's return.
+ *   valuation  realized at trade exit only, no mark-to-market, so drawdown understates intratrade drawdown.
+ * Two entry conventions: "reference" (forecast-grading close, not executable) and "exec-v1" (lib/execution.ts).
  */
 import { FEE_ROUND_TRIP } from "./grading";
 import { maxDrawdown } from "./stats";
 import type { Coin, Prediction } from "./types";
 
-export interface Trade { id: number; coin: Coin; side: 1 | -1; entryT: number; exitT: number; ret: number }
+export interface Candidate { id: number; coin: Coin; side: 1 | -1; entryT: number; exitT: number; gross: number }
+export interface Trade extends Candidate { ret: number; sleeveBefore: number; sleeveAfter: number }
+export interface Costs { fee: number; slippage: number } // slippage per side
 
-export function simulate(rows: Prediction[], mode: "long_short" | "up_only", start = 1000, fee = FEE_ROUND_TRIP) {
-  const coins: Coin[] = ["BTC", "ETH", "SOL"];
-  const graded = rows.filter((r) => r.signal !== "NO_CALL" && r.move !== null && r.price_at_target !== null)
-    .sort((a, b) => Date.parse(a.candle_close_time) - Date.parse(b.candle_close_time));
-  const trades: Trade[] = [];
+export const COINS: Coin[] = ["BTC", "ETH", "SOL"];
+export const ORIGINAL_COSTS: Costs = { fee: FEE_ROUND_TRIP, slippage: 0 };
+export const COST_SCENARIOS: { name: string; costs: Costs }[] = [
+  { name: "0.10% round trip", costs: { fee: 0.001, slippage: 0 } },
+  { name: "0.20% round trip (published)", costs: ORIGINAL_COSTS },
+  { name: "0.20% + 0.05% slippage per side", costs: { fee: 0.002, slippage: 0.0005 } },
+  { name: "0.30% + 0.10% slippage per side", costs: { fee: 0.003, slippage: 0.001 } },
+];
+
+export function book(cands: Candidate[], mode: "long_short" | "up_only", start = 1000, costs: Costs = ORIGINAL_COSTS) {
+  const sorted = [...cands].sort((a, b) => a.entryT - b.entryT || a.id - b.id);
+  const busy: Record<Coin, number> = { BTC: -Infinity, ETH: -Infinity, SOL: -Infinity };
+  const taken: Candidate[] = [];
+  const skipped: { id: number; reason: string }[] = [];
+  for (const c of sorted) {
+    if (mode === "up_only" && c.side !== 1) continue;
+    if (c.entryT < busy[c.coin]) { skipped.push({ id: c.id, reason: "overlaps open trade on this coin" }); continue; }
+    taken.push(c);
+    busy[c.coin] = c.exitT;
+  }
   const eq: Record<Coin, number> = { BTC: start / 3, ETH: start / 3, SOL: start / 3 };
-  const busy: Record<Coin, number> = { BTC: 0, ETH: 0, SOL: 0 };
-  for (const r of graded) {
-    if (mode === "up_only" && r.signal !== "UP") continue;
-    const t = Date.parse(r.candle_close_time);
-    if (t < busy[r.coin]) continue;
-    const side = r.signal === "UP" ? 1 : -1;
-    const ret = side * (r.move as number) - fee;
-    trades.push({ id: r.id, coin: r.coin, side, entryT: t, exitT: Date.parse(r.target_time), ret });
-    busy[r.coin] = Date.parse(r.target_time);
+  const trades: Trade[] = [];
+  const curve = [{ t: sorted[0]?.entryT ?? Date.now(), v: start }];
+  for (const c of [...taken].sort((a, b) => a.exitT - b.exitT || a.id - b.id)) {
+    const ret = c.gross - costs.fee - 2 * costs.slippage;
+    const before = eq[c.coin];
+    eq[c.coin] = before * (1 + ret);
+    trades.push({ ...c, ret, sleeveBefore: before, sleeveAfter: eq[c.coin] });
+    curve.push({ t: c.exitT, v: COINS.reduce((s, k) => s + eq[k], 0) });
   }
-  // equity curve at each trade exit, in exit order
-  const byExit = [...trades].sort((a, b) => a.exitT - b.exitT);
-  const curve = [{ t: graded[0] ? Date.parse(graded[0].candle_close_time) : Date.now(), v: start }];
-  for (const tr of byExit) {
-    eq[tr.coin] *= 1 + tr.ret;
-    curve.push({ t: tr.exitT, v: coins.reduce((s, c) => s + eq[c], 0) });
-  }
-  const value = coins.reduce((s, c) => s + eq[c], 0);
+  const value = COINS.reduce((s, k) => s + eq[k], 0);
   const wins = trades.filter((t) => t.ret > 0).length;
-  return { trades, curve, value, ret: value / start - 1, winRate: trades.length ? wins / trades.length : NaN, maxDD: maxDrawdown(curve.map((p) => p.v)) };
+  return {
+    trades, skipped, curve, value, sleeves: eq, ret: value / start - 1,
+    sumOfTradeReturns: trades.reduce((s, t) => s + t.ret, 0),
+    winRate: trades.length ? wins / trades.length : NaN, maxDD: maxDrawdown(curve.map((p) => p.v)),
+  };
 }
 
-/** Holding BTC from the first call's entry price to the latest known 1h close. */
+/** Reference-close convention: entry = price_at_call, exit = price_at_target. Forecast-grading prices, not fills. */
+export function referenceCandidates(rows: Prediction[]): Candidate[] {
+  return rows.filter((r) => r.signal !== "NO_CALL" && r.move !== null && r.price_at_target !== null).map((r) => ({
+    id: r.id, coin: r.coin, side: r.signal === "UP" ? 1 : -1, entryT: Date.parse(r.candle_close_time),
+    exitT: Date.parse(r.target_time), gross: (r.signal === "UP" ? 1 : -1) * (r.move as number),
+  }));
+}
+
+export function simulate(rows: Prediction[], mode: "long_short" | "up_only", start = 1000, costs: Costs = ORIGINAL_COSTS) {
+  return book(referenceCandidates(rows), mode, start, costs);
+}
+
+/** Holding BTC from the first call's reference close to the latest reference close (same price convention). */
 export function holdBtc(rows: Prediction[], start = 1000) {
   const btc = rows.filter((r) => r.coin === "BTC").sort((a, b) => Date.parse(a.candle_close_time) - Date.parse(b.candle_close_time));
   if (btc.length < 2) return null;

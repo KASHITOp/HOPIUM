@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ModelLabel } from "@/components/Chrome";
 import { Countdown } from "@/components/Countdown";
+import { EnvLabel, TrustPanel, WalkForwardMethod } from "@/components/Trust";
+import { MODE } from "@/lib/data";
 import { PrinterIcon } from "@/components/Icons";
 import { LocalTime } from "@/components/LocalTime";
 import { Meter } from "@/components/Meter";
@@ -93,9 +95,12 @@ export default async function Home() {
         <aside className="self-end space-y-3">
           <ModelLabel />
           <p className="text-[12px] leading-5 text-faded">
-            Walk-forward test: {(engine.walk_forward["net_0.20%"]! * 100).toFixed(1)}% after fees over {engine.walk_forward.trades} trades.
-            Untouched 6-month holdout: {engine.holdout.trades} trades. <Link className="ink-link" href="/how-it-works">Why that matters</Link>
+            Backtest (walk-forward simulation): +{(engine.walk_forward["net_0.20%"]! * 100).toFixed(1)}% compounded across three equal
+            coin sleeves after 0.2% fees, {engine.walk_forward.trades} trades, entry at reference closes, best of {engine.configs_tried} configs.
+            Locked 6-month holdout: {engine.holdout.trades} trades. <Link className="ink-link" href="/how-it-works">Why that matters</Link>
           </p>
+          <WalkForwardMethod />
+          <EnvLabel mode={MODE} />
         </aside>
       </section>
 
@@ -134,6 +139,9 @@ export default async function Home() {
           </div>
         )}
       </section>
+      <div className="pt-12">
+        <TrustPanel rows={rows} runs={runs.data.filter((r) => Date.parse(r.logged_at) > Date.now() - 30 * 86400e3)} mode={MODE} error={error} />
+      </div>
     </>
   );
 }

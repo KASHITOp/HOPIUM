@@ -78,6 +78,7 @@ export function mockData(nowMs = Date.now(), days = 30) {
         id: id++, coin, horizon: "12h", prob_up: +pUp.toFixed(6), signal: sig, price_at_call: +entry.toFixed(2),
         candle_close_time: new Date(closeT).toISOString(),
         inserted_at: new Date(closeT + (2 + r() * 4) * 60e3).toISOString(),
+        provenance: "demo",
         target_time: new Date(target).toISOString(), model_version: "v3-12h-logreg-DEMO",
         p_big_up: +pUp.toFixed(6), p_big_down: +pDown.toFixed(6), score: +(pUp - pDown).toFixed(6), threshold: THRESHOLD, k: 0.01,
         price_at_target: g ? +s[exitIdx]!.c.toFixed(2) : null, move: g ? g.move : null, outcome: g ? g.outcome : null,

@@ -1,3 +1,4 @@
+import { provenanceOf } from "./provenance";
 import { lean } from "./summary";
 import type { Prediction } from "./types";
 
@@ -47,9 +48,11 @@ export function applyFilters(rows: Prediction[], f: Filters): Prediction[] {
 }
 
 const COLS = ["id", "coin", "horizon", "signal", "prob_up", "p_big_up", "p_big_down", "score", "threshold", "price_at_call",
-  "candle_close_time", "inserted_at", "target_time", "price_at_target", "move", "outcome", "hit", "graded_at", "model_version"] as const;
+  "candle_close_time", "inserted_at", "target_time", "price_at_target", "move", "outcome", "hit", "graded_at", "model_version",
+  "provenance", "job_started_at", "input_cutoff_at", "generated_at", "run_id", "late_rule"] as const;
 
 export function toCsv(rows: Prediction[]): string {
   const esc = (v: unknown) => (v === null || v === undefined ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-  return [COLS.join(","), ...rows.map((r) => COLS.map((c) => esc(r[c])).join(","))].join("\n") + "\n";
+  // provenance: blank in the database = legacy row; exported as the resolved label so blanks are never read as "live_prospective"
+  return [COLS.join(","), ...rows.map((r) => COLS.map((c) => esc(c === "provenance" ? provenanceOf(r) : r[c])).join(","))].join("\n") + "\n";
 }

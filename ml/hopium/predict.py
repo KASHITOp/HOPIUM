@@ -22,6 +22,7 @@ from . import db, deribit, fetch
 from .config import COINS, MAX_LATE_MINUTES, MODELS, ROOT
 from .engine import predict_row
 from .features_v3 import LOOKBACK_H, build_v3
+from .lifecycle import stamp, strip
 
 SAFETY_MIN = 2
 OPS = ROOT / "ops" / "last_predict.json"
@@ -58,7 +59,8 @@ def write_ops(res: dict):
 
 
 def main(dry: bool = False) -> int:
-    close = pd.Timestamp.now(tz="UTC").floor("h")
+    started = pd.Timestamp.now(tz="UTC")
+    close = started.floor("h")
     iso = close.isoformat()
     late = minutes_late(close)
     res = {"job": "predict", "candle_close_time": iso, "started_minutes_after_close": round(late, 2), "dry_run": dry}
@@ -78,10 +80,12 @@ def main(dry: bool = False) -> int:
         funding = {c: deribit.funding(c, start, close) for c in COINS} if "fund" in cfg["groups"] else None
         feats = build_v3(candles, fetch.fear_greed(), funding)
         rows = []
+        generated = pd.Timestamp.now(tz="UTC")
         for coin in COINS:
             last = feats[feats.coin == coin].sort_values("ts").iloc[-1]
             assert last.t_known == close, (last.t_known, close)
             p = predict_row(bundle, last)
+            generated = pd.Timestamp.now(tz="UTC")
             pu, pd_ = round(p["p_big_up"], 6), round(p["p_big_down"], 6)
             rows.append({
                 "coin": coin, "horizon": f"{h}h", "prob_up": pu, "signal": p["signal"],
@@ -90,6 +94,8 @@ def main(dry: bool = False) -> int:
                 "p_big_up": pu, "p_big_down": pd_, "score": round(pu - pd_, 6),
                 "threshold": bundle["threshold"], "k": cfg["k"],
             })
+            # input cutoff = close of the last closed candle the features were built from (t_known)
+            rows[-1] = stamp(rows[-1], started, generated, pd.Timestamp(last.t_known))
         for r in rows:
             print(f"  {r['coin']} {r['horizon']}  P(big up)={r['p_big_up']:.3f} P(big down)={r['p_big_down']:.3f} "
                   f"score={r['score']:+.3f} thr={r['threshold']}  {r['signal']:7s} @ {r['price_at_call']}")
@@ -104,7 +110,14 @@ def main(dry: bool = False) -> int:
             db.log_run("predict", "missed", iso, res["detail"])
             write_ops(res)
             return 0
-        out = db.insert("predictions", rows, on_conflict="coin,horizon,candle_close_time")
+        try:
+            out = db.insert("predictions", rows, on_conflict="coin,horizon,candle_close_time")
+        except Exception as e:  # trust-v1 columns missing until migration 20261105000000 is applied
+            if "PGRST204" not in str(e):
+                raise
+            print("trust-v1 columns not in database yet; inserting without lifecycle fields")
+            res["lifecycle_fields"] = "not stored: migration 20261105000000 not applied"
+            out = db.insert("predictions", strip(rows), on_conflict="coin,horizon,candle_close_time")
         res |= {"status": "ok", "inserted": len(out), "already_existed": len(rows) - len(out),
                 "inserted_minutes_after_close": round(late, 2), "ids": [r["id"] for r in out]}
         print(f"inserted {len(out)} new rows ({len(rows) - len(out)} already existed)")

@@ -184,3 +184,16 @@ did not, and the site says exactly that.
 | /maker | 100 | 100 | 96 | 100 | 1.9 s | 0 |
 
 CLS went from 0.182 to 0 on Home and Receipts once the reserved-height price strip deployed.
+
+## Trust v1, phase 1 (branch trust-v1)
+
+| Date (UTC) | Decision | Why / evidence |
+|---|---|---|
+| 2026-11-04 | Legacy rows keep `provenance` NULL and show as "live (pre-provenance label)" | Brief: never assume unknown origin; only the predict job writes the table, so they stay in live metrics, labelled weaker |
+| 2026-11-04 | `predictions.provenance` may only be `live_prospective` | Demo/backtest can't enter the live table at all |
+| 2026-11-04 | predict.py retries without trust-v1 columns on PGRST204 | So the hourly job keeps working until migration 20261105000000 is applied |
+| 2026-11-04 | +91.0% relabelled, not recomputed | Brief: don't change past results. Execution-convention backtest marked unavailable |
+
+## SQL I must run (trust v1)
+
+1. `supabase/migrations/20261105000000_trust_v1.sql` in the Supabase SQL editor (additive; no rows touched).
