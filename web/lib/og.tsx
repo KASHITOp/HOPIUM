@@ -1,5 +1,5 @@
 /** Shared bits for next/og share images (dark receipt style). */
-export const OG_SIZE = { width: 1200, height: 630 };
+export const OG_SIZE = { width: 1200, height: 627 }; // LinkedIn recommended size
 
 export async function plexMono(weight = 500): Promise<ArrayBuffer | null> {
   try {

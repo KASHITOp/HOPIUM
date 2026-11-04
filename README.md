@@ -88,4 +88,9 @@ cd web && npm run lint && npm run typecheck && npm test && npm run build
 cd supabase/tests && npm install && npm test
 ```
 
+## About the maker
+
+Built by **Kartavyaa Patel**, 20, from Surat. Grew up around the family's diamond manufacturing business, ran an NFT
+company in 2021, founded CRAAVR, is building Sambhal and studies for a BBA at NMIMS. [LinkedIn](https://linkedin.com/in/kartavyaapatel) · [/maker](https://hopium-phi.vercel.app/maker)
+
 Not financial advice. Crypto is unregulated and can be highly risky. Predictions are probabilistic and often wrong.

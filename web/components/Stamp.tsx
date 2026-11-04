@@ -1,6 +1,6 @@
 import type { Outcome } from "@/lib/types";
 
-export type StampKind = "CALLED IT" | "REKT" | "SAT OUT" | "DEAD MONEY" | "PENDING" | "DEMO DATA";
+export type StampKind = "CALLED IT" | "REKT" | "SAT OUT" | "DEAD MONEY" | "PENDING" | "DEMO DATA" | "BUILT IN PUBLIC. GRADED IN PUBLIC.";
 
 const INK: Record<StampKind, string> = {
   "CALLED IT": "#6FA27E",
@@ -9,6 +9,7 @@ const INK: Record<StampKind, string> = {
   "DEAD MONEY": "#6E695F",
   PENDING: "#898377",
   "DEMO DATA": "#D4614C",
+  "BUILT IN PUBLIC. GRADED IN PUBLIC.": "#6FA27E",
 };
 
 export function stampFor(outcome: Outcome | null): StampKind {
@@ -29,8 +30,10 @@ export function Stamp({ kind, seed = 1, size = "md", animate = false }: { kind: 
   const color = INK[kind];
   const pencil = kind === "PENDING";
   const fs = size === "lg" ? 34 : size === "sm" ? 15 : 22;
-  const w = Math.round(kind.length * fs * 0.68 + fs * 1.2);
-  const h = Math.round(fs * 1.9);
+  const lines = kind.length > 20 ? kind.split(/(?<=\.) /) : [kind];
+  const longest = Math.max(...lines.map((l) => l.length));
+  const w = Math.round(longest * fs * 0.68 + fs * 1.2);
+  const h = Math.round(fs * (0.75 + 1.15 * lines.length));
   const rot = tilt(seed);
   return (
     <svg
@@ -47,7 +50,7 @@ export function Stamp({ kind, seed = 1, size = "md", animate = false }: { kind: 
         {!pencil && <rect x="7" y="7" width={w - 14} height={h - 14} fill="none" stroke={color} strokeWidth="1" />}
         <text
           x={w / 2}
-          y={h / 2 + fs * 0.35}
+          y={h / 2 + fs * 0.35 - ((lines.length - 1) * fs * 1.15) / 2}
           textAnchor="middle"
           fill={color}
           fontFamily={pencil ? "var(--font-mono), monospace" : "var(--font-display), sans-serif"}
@@ -55,7 +58,9 @@ export function Stamp({ kind, seed = 1, size = "md", animate = false }: { kind: 
           fontSize={fs}
           letterSpacing={pencil ? fs * 0.25 : 1}
         >
-          {kind}
+          {lines.map((l, i) => (
+            <tspan key={l} x={w / 2} dy={i ? fs * 1.15 : 0}>{l}</tspan>
+          ))}
         </text>
         {pencil && <path d={`M8 ${h - 6} q ${w / 4} -3 ${w / 2} 0 t ${w / 2 - 16} -1`} stroke={color} strokeWidth="1.2" fill="none" strokeLinecap="round" />}
       </g>

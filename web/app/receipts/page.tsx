@@ -38,6 +38,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
     ...calibrationBins(graded.filter((r) => r.p_big_down !== null).map((r) => r.p_big_down!), graded.filter((r) => r.p_big_down !== null).map((r) => (r.move ?? 0) < -k)).map((b) => ({ ...b, kind: "down" as const })),
   ];
   const roll = rollingHitRate(rows, 20);
+  const firstDue = rows.filter((r) => r.outcome === null).map((r) => r.target_time).sort()[0] ?? null;
   const st = hitStreaks(rows);
   const shame = wallOfShame(rows, 10);
   const jams = runs.data.filter((r) => r.job === "predict" && r.status === "missed");
@@ -111,6 +112,19 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
         </dl>
       </section>
 
+      {graded.length === 0 ? (
+        <section className="border-b border-rule py-10" aria-label="Waiting for the first grade">
+          <h2 className="display text-[30px] text-ink">Nothing graded yet.</h2>
+          {firstDue ? (
+            <p className="mt-2 max-w-2xl text-[14px] leading-6">
+              The first receipts grade at <LocalTime iso={firstDue} /> your time, when the Binance 1h candle ending then closes and the
+              next hourly job compares it with the entry price. Charts appear here once there is something honest to draw.
+            </p>
+          ) : (
+            <p className="mt-2 text-[14px]">No predictions in this selection yet.</p>
+          )}
+        </section>
+      ) : (
       <section className="grid gap-8 border-b border-rule py-8 md:grid-cols-[1.5fr_1fr]">
         <div>
           <h2 className="display text-[30px] text-ink">Rolling hit rate</h2>
@@ -130,6 +144,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
         </div>
       </section>
 
+      )}
       <section className="grid gap-6 border-b border-rule py-8 md:grid-cols-[auto_1fr]" aria-label="Printer jams">
         <JamIcon size={40} className="text-ink" />
         <div>

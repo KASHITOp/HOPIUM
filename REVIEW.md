@@ -159,3 +159,18 @@ did not, and the site says exactly that.
 - Decision: keep the cron (it costs nothing if it starts working) and add `.github/workflows/heartbeat.yml`, a
   self-chaining fallback: sleep until HH:02, dispatch hourly.yml, dispatch itself. Only one chain runs at a time, and it
   retires as soon as a `schedule` run appears in the last 3 hours. Manual kick via ml/ops/run-now stays as a last resort.
+
+## Final session additions (2026-11-04)
+
+- Home: "Why it's sitting out" panel (ink gauge per coin: lean = P(big up) minus P(big down), hatched no-call band at
+  +/-0.16, copy such as "BTC lean +0.03. Needs 0.16 to call. Not even close."), and an activity counter (hours watched,
+  calls made out of coin-hours, printer jams) since the first live receipt.
+- Receipts: when nothing is graded, an empty state gives the first grading time in the visitor's local time instead of empty charts.
+- /maker page (owner's copy verbatim), "Maker" in the nav, "Printed by Kartavyaa Patel" in the footer, case-study byline,
+  /maker share image, README "About the maker".
+- Share images now 1200x627 (LinkedIn's recommended size); home image carries the honest headline stamp
+  "DOES NOT BEAT TRADING FEES IN TESTING". Verified locally: both render 200, PNG 1200x627.
+- Ban checklist on all new elements: pass (no em dashes, emojis, banned words, gradients, shadows, rounded corners,
+  stock icons; the three new link icons are hand-drawn glyphs, not brand logos). Contrast: new elements reuse the tokens
+  already measured above (ink, faded, red 5.01:1 on counter, green 5.79:1 on slip): pass.
+- Checks: web lint clean, typecheck clean, 36 Vitest tests, production build OK; ml 34 pytest; supabase 31 schema tests.

@@ -5,7 +5,8 @@ import { PrinterIcon } from "@/components/Icons";
 import { LocalTime } from "@/components/LocalTime";
 import { Meter } from "@/components/Meter";
 import { Receipt, ReceiptSkeleton } from "@/components/Receipt";
-import { getPredictions } from "@/lib/data";
+import { SitOutPanel, Watched } from "@/components/SitOut";
+import { getPredictions, getRunLog } from "@/lib/data";
 import engine from "@/lib/engine.json";
 import { price } from "@/lib/format";
 import { DISCLAIMER, historicConfident, lastDays, lean, tally } from "@/lib/summary";
@@ -70,7 +71,8 @@ function CoinRow({ coin, p, historic }: { coin: Coin; p: Prediction | undefined;
 }
 
 export default async function Home() {
-  const { data: rows, error } = await getPredictions(3000);
+  const [{ data: rows, error }, runs] = await Promise.all([getPredictions(20000), getRunLog(3650)]);
+  const missed = runs.data.filter((r) => r.job === "predict" && r.status === "missed").length;
   const latest = new Map<Coin, Prediction>();
   for (const r of rows) if (!latest.has(r.coin)) latest.set(r.coin, r);
   const historic = historicConfident(rows);
@@ -104,6 +106,8 @@ export default async function Home() {
       )}
 
       <div className="rule-thick" />
+      <Watched rows={rows} missed={missed} />
+      <SitOutPanel latest={latest} threshold={engine.threshold} />
       {COINS.map((c) => (
         <CoinRow key={c} coin={c} p={latest.get(c)} historic={historic} />
       ))}
