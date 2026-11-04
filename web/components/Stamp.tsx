@@ -50,7 +50,7 @@ export function Stamp({ kind, seed = 1, size = "md", animate = false }: { kind: 
           y={h / 2 + fs * 0.35}
           textAnchor="middle"
           fill={color}
-          fontFamily={pencil ? '"IBM Plex Mono", monospace' : '"Bricolage Grotesque", sans-serif'}
+          fontFamily={pencil ? "var(--font-mono), monospace" : "var(--font-display), sans-serif"}
           fontWeight={pencil ? 500 : 800}
           fontSize={fs}
           letterSpacing={pencil ? fs * 0.25 : 1}

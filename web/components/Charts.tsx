@@ -1,5 +1,5 @@
 /** Ink-on-ledger charts: rule-coloured grid, faded-ink axis labels, ink data lines, hatched fills. */
-const F = '"IBM Plex Mono", monospace';
+const F = "var(--font-mono), monospace";
 
 export function LineChart({ points, yMin = 0, yMax = 1, refY, refLabel, yFmt = (v: number) => `${Math.round(v * 100)}%`, height = 220, label }: {
   points: { t: number; v: number }[]; yMin?: number; yMax?: number; refY?: number; refLabel?: string; yFmt?: (v: number) => string; height?: number; label: string;

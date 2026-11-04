@@ -13,7 +13,7 @@ body {
 }
 
 body {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
@@ -59,7 +59,7 @@ a {
   }
 
   .label {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono), ui-monospace, monospace;
     font-size: 11px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -67,7 +67,7 @@ a {
   }
 
   .display {
-    font-family: "Bricolage Grotesque", ui-sans-serif, sans-serif;
+    font-family: var(--font-display), ui-sans-serif, sans-serif;
     font-weight: 800;
     letter-spacing: -0.045em;
     line-height: 0.92;

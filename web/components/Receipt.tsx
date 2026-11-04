@@ -77,7 +77,7 @@ function pct(x: number | null) {
 
 export function ReceiptSkeleton({ lines = 7 }: { lines?: number }) {
   return (
-    <div className="relative" aria-busy="true" aria-label="Printing receipt">
+    <div className="relative" role="status" aria-busy="true" aria-label="Printing receipt">
       <div className="slip px-5 pb-7 pt-7" style={{ clipPath: "url(#torn)" }}>
         <div className="skeleton-line w-1/3" />
         <div className="rule mt-3" />
