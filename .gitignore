@@ -9,3 +9,6 @@ node_modules/
 .vercel
 ml/research/*.log
 ml/research/__pycache__/
+web/node_modules/
+web/.next/
+web/.env*.local
