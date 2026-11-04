@@ -31,3 +31,9 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 1. `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor. Until then the live predict job
    logs a constraint error every hour (nothing bad is written). db-check will report the new columns as missing.
 | 2026-11-04 | Merged claude/hopium-engine-v3 into main with a merge commit via git (no force push) | GitHub API tool returned 'invalid session' for create_pull_request; owner pre-approved the merge |
+
+## WAITING ON KARTAVYAA
+
+1. **Run `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor.** db-check (09:33 UTC) shows
+   `predictions` is missing p_big_up, p_big_down, score, threshold, k. Until this runs, every hourly predict attempt fails
+   with a schema error (logged in run_log and ml/ops/last_predict.json); nothing invalid can be written.
