@@ -57,6 +57,7 @@ export default function CaseStudy() {
   return (
     <article className="max-w-3xl py-10 text-[14px] leading-7">
       <p className="label">case study, two minute read</p>
+      <p className="mt-1 text-[13px]">By <Link className="ink-link" href="/maker">Kartavyaa Patel</Link></p>
       <h1 className="display mt-2 text-[52px] text-ink sm:text-[72px]">Building a crypto model that is allowed to lose in public.</h1>
 
       <h2 className="display mt-10 text-[30px] text-ink">The problem</h2>

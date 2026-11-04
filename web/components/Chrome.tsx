@@ -11,6 +11,7 @@ const NAV = [
   ["/lab", "Lab"],
   ["/how-it-works", "How it works"],
   ["/case-study", "Case study"],
+  ["/maker", "Maker"],
 ] as const;
 
 export function Masthead() {
@@ -71,6 +72,7 @@ export function Footer() {
         <ul className="space-y-1">
           <li><Link className="ink-link" href="/how-it-works#status">System status</Link></li>
           <li><a className="ink-link" href="https://github.com/KASHITOp/HOPIUM">Source code</a></li>
+          <li><Link className="ink-link" href="/maker">Printed by Kartavyaa Patel</Link></li>
         </ul>
       </div>
     </footer>
