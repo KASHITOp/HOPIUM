@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-11-04T09:21:03.583797+00:00",
+ "checked_at": "2026-11-04T09:32:40.303430+00:00",
  "checks": [
   {
    "check": "secrets present",
@@ -13,8 +13,8 @@
   },
   {
    "check": "table predictions + columns",
-   "pass": true,
-   "detail": ""
+   "pass": false,
+   "detail": "missing: ['p_big_up', 'p_big_down', 'score', 'threshold', 'k']"
   },
   {
    "check": "table run_log + columns",
@@ -122,7 +122,7 @@
    "detail": ""
   }
  ],
- "ok": true,
+ "ok": false,
  "report": {
   "tables": {
    "run_log": {
@@ -248,9 +248,9 @@
    "predictions_before_insert",
    "predictions_before_update"
   ],
-  "checked_at": "2026-11-04T09:21:05.101714+00:00",
+  "checked_at": "2026-11-04T09:32:42.341256+00:00",
   "server_version": "17.11"
  },
- "passed": 24,
+ "passed": 23,
  "total": 24
 }
