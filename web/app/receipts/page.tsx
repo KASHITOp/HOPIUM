@@ -10,6 +10,10 @@ import { getPredictions, getRunLog } from "@/lib/data";
 import { applyFilters, BANDS, parseFilters } from "@/lib/filters";
 import { price, signedPct } from "@/lib/format";
 import { netReturn } from "@/lib/grading";
+import { summarizeOutcomes } from "@/lib/outcomes";
+import { period } from "@/lib/provenance";
+import { EnvLabel } from "@/components/Trust";
+import { MODE } from "@/lib/data";
 import { calibrationBins, luckSentence, pctCeil, pctFloor } from "@/lib/stats";
 import { hitStreaks, lean, rollingHitRate, tally, wallOfShame } from "@/lib/summary";
 
@@ -31,6 +35,8 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
   const [{ data: all, error }, runs] = await Promise.all([getPredictions(20000), getRunLog(3650)]);
   const rows = applyFilters(all, f);
   const t = tally(rows);
+  const oc = summarizeOutcomes(rows);
+  const span = period(rows);
   const graded = rows.filter((r) => r.outcome !== null);
   const k = graded.find((r) => r.k !== null)?.k ?? 0.01;
   const cal = [
@@ -93,8 +99,15 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
             {t.calls ? <>95% Wilson interval {pctFloor(t.ci.lo)} to {pctCeil(t.ci.hi)}, n = {t.calls} ({t.hits} hits, {t.misses} misses)</> : "No graded calls in this selection yet."}
           </p>
           <p className="mt-3 max-w-lg text-[15px] leading-6 text-ink">{luckSentence(t.hits, t.calls)}</p>
+          <dl className="mt-4 grid max-w-lg grid-cols-3 gap-3 text-[12px]">
+            <div><dt className="label">direction right</dt><dd className="text-ink">{oc.direction.hits} / {oc.direction.denominator}</dd><dd className="text-faded">excl. {oc.direction.flat} flat</dd></div>
+            <div><dt className="label">declared &gt;{(k * 100).toFixed(0)}% move happened</dt><dd className="text-ink">{oc.target.occurred} / {oc.target.denominator}</dd><dd className="text-faded">all graded calls</dd></div>
+            <div><dt className="label">sim. trade net &gt; 0</dt><dd className="text-ink">{oc.trade.profitable} / {oc.trade.denominator}</dd><dd className="text-faded">0.2% fees, reference closes</dd></div>
+          </dl>
+          <p className="mt-1 text-[12px] text-faded">Excluded everywhere: {oc.excluded.noCall} NO CALL, {oc.excluded.pending} pending. Period (reference closes): {span ? <><LocalTime iso={span.start} /> to <LocalTime iso={span.end} /></> : "none"}. <EnvLabel mode={MODE} /></p>
           <p className="mt-2 max-w-lg text-[12px] leading-5 text-faded">
-            That is a one-sided exact binomial test against a 50% coin flip. A small number here means luck is an unlikely
+            Hourly 12h calls overlap and the three coins move together, so these counts are not independent samples; treat the test
+            below as descriptive. That is a one-sided exact binomial test against a 50% coin flip. A small number here means luck is an unlikely
             explanation, not that the model makes money: fees take 0.2% from every trade.
           </p>
         </div>
@@ -158,7 +171,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
 
       <section className="py-8" aria-labelledby="shame">
         <h2 id="shame" className="display text-[44px] text-ink">Wall of Shame</h2>
-        <p className="mt-1 text-[13px]">The 10 most confident calls that went the wrong way. Model was sure. Model was wrong. We printed it anyway.</p>
+        <p className="mt-1 text-[13px]">The 10 most confident calls that went the wrong way. Model was sure. Model was wrong. We printed it anyway. This is a hand-picked subset of the worst misses, not the record: every loss is in <a className="ink-link" href="#ledger">the ledger</a> and the <a className="ink-link" href="/receipts/csv">CSV</a>.</p>
         {shame.length === 0 ? (
           <p className="mt-4 text-faded">No wrong calls yet. Give it time.</p>
         ) : (

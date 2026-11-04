@@ -1,4 +1,5 @@
 import type { Coin, Prediction } from "@/lib/types";
+import { MODE } from "@/lib/data";
 
 const F = "var(--font-mono), monospace";
 
@@ -89,7 +90,7 @@ export function Watched({ rows, missed }: { rows: Prediction[]; missed: number }
         </div>
       ))}
     </dl>
-      <p className="mt-3 text-[11px] text-faded">since the first live receipt, {first.slice(0, 10)} {first.slice(11, 16)} UTC. A coin-hour is one coin, one hourly check.</p>
+      <p className="mt-3 text-[11px] text-faded">since the first {MODE === "mock" ? "DEMO" : "live"} receipt, {first.slice(0, 10)} {first.slice(11, 16)} UTC. A coin-hour is one coin, one hourly check.</p>
     </div>
   );
 }

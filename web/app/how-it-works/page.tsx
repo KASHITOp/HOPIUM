@@ -5,6 +5,7 @@ import { LocalTime } from "@/components/LocalTime";
 import { getModelRuns, getRunLog } from "@/lib/data";
 import engine from "@/lib/engine.json";
 import { signedPct } from "@/lib/format";
+import { WalkForwardMethod } from "@/components/Trust";
 
 export const revalidate = 300;
 export const metadata: Metadata = { title: "How it works", description: "Data, features, validation, the honest result, and what HOPIUM cannot do." };
@@ -39,7 +40,8 @@ export default async function How() {
       <p className="mt-4 border-2 border-ink p-4 text-[15px] leading-6 text-ink">
         Honest headline: <strong>{engine.label}</strong> In walk-forward testing the model beat fees. On six months of data it had
         never seen, it found nothing worth trading and made {engine.holdout.trades} trades. We publish its calls anyway, because a
-        public record is the only test that cannot be tuned after the fact.
+        live record made before outcomes exist cannot be tuned to those outcomes after the fact. It can still be cherry-picked by
+        how long we run it or which version we report, which is why every version and every receipt stays up.
       </p>
 
       <H2>What it predicts</H2>
@@ -81,17 +83,19 @@ export default async function How() {
         even one bit.
       </p>
 
-      <H2>How it was tested</H2>
+      <H2 id="method">How it was tested</H2>
       <p>
         Walk-forward only: train on the past, test on the next unseen month, roll forward, {engine.folds.length} months in total
-        ({wf.dev_period}). Inside each training window the last 90 days choose the trade threshold, so the test month never
-        helps pick anything. {engine.configs_tried} configurations were tried and every one is logged, including the losers.
+        ({wf.dev_period}). Inside each training window the last 90 days choose the trade threshold, so no test month picks its own
+        threshold. But the config itself was chosen by comparing walk-forward results across {engine.configs_tried} configurations
+        (all logged, losers included), so the walk-forward figure is a selected result, not an untouched test.
         The most recent six months were locked away before any of that and used exactly once, on the single chosen config.
       </p>
+      <WalkForwardMethod open />
       <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
         {[
           ["walk-forward trades", String(wf.trades)],
-          ["net after 0.2% fees", signedPct(wf["net_0.20%"], 1)],
+          ["compounded 3-sleeve net, 0.2% fees", signedPct(wf["net_0.20%"], 1)],
           ["Sharpe (95% CI)", `${wf.sharpe!.toFixed(2)} (${wf.sharpe_ci95![0]!.toFixed(2)} to ${wf.sharpe_ci95![1]!.toFixed(2)})`],
           ["max drawdown", pc(wf.max_dd)],
           ["win rate", pc(wf.win_rate)],
@@ -117,12 +121,13 @@ export default async function How() {
         easy. Being right by more than the toll booth charges is the whole game.
       </p>
 
-      <H2>Why 55% is good and 90% is a lie</H2>
+      <H2>Why we distrust 90%</H2>
       <p>
-        Short-term crypto prices are close to a random walk. Anyone claiming 90% accuracy is grading after the fact, counting
-        only the calls they like, or leaking tomorrow into today. Our own rule: if a backtest ever scores above 65%, we assume a
-        bug and stop. An honest model lives between 51% and 57%, and even that is only useful if the wins are bigger than the
-        fees.
+        Short-term crypto prices are close to a random walk. A claim of 90% directional accuracy on hourly-to-daily crypto moves is far more often
+        explained by grading after the fact, counting only chosen calls, or leaking tomorrow into today than by real skill. Our
+        own rule: if a backtest scores above 65%, we treat it as a probable bug and stop. Our models have landed between 50% and
+        55%; that is our experience, not a law. And accuracy alone says little: a call can be right on direction and still lose
+        money after fees.
       </p>
 
       <H2>What it cannot do</H2>

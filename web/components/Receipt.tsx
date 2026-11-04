@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { price, signedPct } from "@/lib/format";
-import { netReturn } from "@/lib/grading";
+import { rowOutcome } from "@/lib/outcomes";
+import { PROVENANCE_LABEL, provenanceOf } from "@/lib/provenance";
 import { DISCLAIMER, lean } from "@/lib/summary";
 import type { Prediction } from "@/lib/types";
 import { Barcode } from "./Barcode";
@@ -22,7 +23,8 @@ function Line({ k, v, strong }: { k: string; v: React.ReactNode; strong?: boolea
 /** A thermal-paper receipt, night-shift edition. Torn edges are an SVG clip-path; no shadows anywhere. */
 export function Receipt({ p, printing = false, compact = false }: { p: Prediction; printing?: boolean; compact?: boolean }) {
   const graded = p.outcome !== null;
-  const net = graded && p.move !== null ? netReturn(p.signal, p.move) : null;
+  const o = rowOutcome(p);
+  const prov = provenanceOf(p);
   const gapMin = (Date.parse(p.inserted_at) - Date.parse(p.candle_close_time)) / 60e3;
   return (
     <article className={`relative ${printing ? "printing" : ""}`} aria-label={`Receipt ${p.id}: ${p.coin} ${p.horizon} ${CALL_WORD[p.signal]}`}>
@@ -44,20 +46,27 @@ export function Receipt({ p, printing = false, compact = false }: { p: Predictio
         <div className="rule mt-3 border-dashed" />
         <div className="mt-2">
           <Line k="called" v={<LocalTime iso={p.candle_close_time} />} />
-          {!compact && <Line k="printed" v={`${gapMin.toFixed(1)} min after candle close`} />}
-          <Line k="entry (1h close)" v={`$${price(p.price_at_call)}`} strong />
+          {!compact && <Line k="stored (db clock)" v={`${gapMin.toFixed(1)} min after candle close`} />}
+          <Line k="reference (1h close)" v={`$${price(p.price_at_call)}`} strong />
           <Line k="P(big up)" v={pct(p.p_big_up ?? p.prob_up)} />
           <Line k="P(big down)" v={pct(p.p_big_down)} />
           <Line k="lean" v={`${(lean(p) * 100).toFixed(1)}% ${p.score !== null && p.score < 0 ? "down" : "up"}`} />
           <Line k="grades at" v={<LocalTime iso={p.target_time} />} />
           {graded && (
             <>
-              <Line k="exit (1h close)" v={`$${price(p.price_at_target!)}`} strong />
+              <Line k="graded at (1h close)" v={`$${price(p.price_at_target!)}`} strong />
               <Line k="move" v={signedPct(p.move)} strong />
-              {p.signal !== "NO_CALL" && <Line k="after 0.2% fees" v={signedPct(net)} />}
+              {p.signal !== "NO_CALL" && (
+                <>
+                  <Line k="direction" v={o.direction.toLowerCase()} />
+                  <Line k={`${p.signal === "UP" ? "+" : "-"}${((p.k ?? 0.01) * 100).toFixed(0)}% move happened`} v={o.target ? "yes" : "no"} />
+                  <Line k="sim. trade, 0.2% fees" v={signedPct(o.net)} />
+                </>
+              )}
             </>
           )}
         </div>
+        <div className={`mt-2 text-[10px] uppercase tracking-[0.1em] ${prov === "demo" ? "text-red" : "text-faded"}`}>{PROVENANCE_LABEL[prov]}</div>
         <div className="mt-4">
           <Barcode id={p.id} height={compact ? 24 : 32} />
         </div>

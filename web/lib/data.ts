@@ -5,6 +5,7 @@
  * NEXT_PUBLIC_DATA_MODE picks the adapter; it defaults to live when Supabase env vars exist.
  */
 import { mockData } from "./mock";
+import { liveOnly } from "./provenance";
 import type { Candle, ModelRun, Prediction, RunLog } from "./types";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
@@ -39,7 +40,7 @@ async function wrap<T>(live: () => Promise<T>, mock: () => T): Promise<Result<T>
 /** Newest first. In live mode a failed request returns an EMPTY list plus the error (never mock rows). */
 export async function getPredictions(limit = 5000): Promise<Result<Prediction[]>> {
   const r = await wrap(
-    () => rest<Prediction[]>(`predictions?select=*&order=candle_close_time.desc,coin.asc&limit=${limit}`),
+    async () => liveOnly(await rest<Prediction[]>(`predictions?select=*&order=candle_close_time.desc,coin.asc&limit=${limit}`)),
     () => mockData().predictions.slice(0, limit),
   );
   return r.error ? { ...r, data: [] } : r;
@@ -47,7 +48,7 @@ export async function getPredictions(limit = 5000): Promise<Result<Prediction[]>
 
 export async function getPrediction(id: number): Promise<Result<Prediction | null>> {
   const r = await wrap(
-    async () => (await rest<Prediction[]>(`predictions?select=*&id=eq.${id}`))[0] ?? null,
+    async () => liveOnly(await rest<Prediction[]>(`predictions?select=*&id=eq.${id}`))[0] ?? null,
     () => mockData().predictions.find((p) => p.id === id) ?? null,
   );
   return r.error ? { ...r, data: null } : r;
