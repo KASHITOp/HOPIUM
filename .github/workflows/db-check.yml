@@ -1,5 +1,5 @@
 name: db-check
-# Read-only verification of the Supabase setup. Commits ml/ops/db_check.json back to the branch.
+# Read-only verification of the Supabase setup. Commits ml/ops/db_check.json back to the branch. (rerun: engine v3 migration)
 on:
   workflow_dispatch:
   push:

@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-11-04T09:33:38.531454+00:00",
+ "checked_at": "2026-11-04T10:19:52.475614+00:00",
  "checks": [
   {
    "check": "secrets present",
@@ -13,8 +13,8 @@
   },
   {
    "check": "table predictions + columns",
-   "pass": false,
-   "detail": "missing: ['p_big_up', 'p_big_down', 'score', 'threshold', 'k']"
+   "pass": true,
+   "detail": ""
   },
   {
    "check": "table run_log + columns",
@@ -122,7 +122,7 @@
    "detail": ""
   }
  ],
- "ok": false,
+ "ok": true,
  "api_url": "https://pnctzcczifowlhdchdhg.supabase.co",
  "report": {
   "tables": {
@@ -202,11 +202,16 @@
      "predictions_coin_check",
      "predictions_coin_horizon_candle_close_time_key",
      "predictions_horizon_check",
+     "predictions_k_check",
      "predictions_outcome_check",
+     "predictions_p_big_down_check",
+     "predictions_p_big_up_check",
      "predictions_pkey",
      "predictions_price_at_call_check",
      "predictions_prob_up_check",
+     "predictions_score_check",
      "predictions_signal_check",
+     "predictions_threshold_check",
      "signal_matches_prob",
      "target_matches_horizon"
     ],
@@ -249,9 +254,9 @@
    "predictions_before_insert",
    "predictions_before_update"
   ],
-  "checked_at": "2026-11-04T09:33:39.745086+00:00",
+  "checked_at": "2026-11-04T10:19:53.396494+00:00",
   "server_version": "17.11"
  },
- "passed": 23,
+ "passed": 24,
  "total": 24
 }

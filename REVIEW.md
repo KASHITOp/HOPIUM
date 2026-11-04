@@ -34,6 +34,4 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 
 ## WAITING ON KARTAVYAA
 
-1. **Run `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor.** db-check (09:33 UTC) shows
-   `predictions` is missing p_big_up, p_big_down, score, threshold, k. Until this runs, every hourly predict attempt fails
-   with a schema error (logged in run_log and ml/ops/last_predict.json); nothing invalid can be written.
+Nothing right now. (Vercel scope approved; migration 0003 applied, both verified.)

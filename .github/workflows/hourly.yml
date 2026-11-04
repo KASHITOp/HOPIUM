@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "2 * * * *"
   workflow_dispatch:
+  push:   # manual kick without the API: commit a change to ml/ops/run-now within ~15 min of a candle close
+    branches: [main]
+    paths: [ml/ops/run-now]
 concurrency: { group: hourly, cancel-in-progress: false }
 permissions: { contents: write }
 jobs:
