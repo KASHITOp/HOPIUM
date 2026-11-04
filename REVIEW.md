@@ -30,3 +30,4 @@ Decisions taken autonomously, newest last. Each entry: what, why, evidence.
 
 1. `supabase/migrations/20261104020000_engine_v3.sql` in the Supabase SQL editor. Until then the live predict job
    logs a constraint error every hour (nothing bad is written). db-check will report the new columns as missing.
+| 2026-11-04 | Merged claude/hopium-engine-v3 into main with a merge commit via git (no force push) | GitHub API tool returned 'invalid session' for create_pull_request; owner pre-approved the merge |
