@@ -85,3 +85,24 @@ Nothing right now. (Vercel scope approved; migration 0003 applied, both verified
 
 Fixes: stamp red #D25A44 measured 4.28:1 on slip, lightened within its hue to #D4614C. Pencil #6E695F is below 4.5:1, so
 small text uses #898377 and #6E695F is kept for stamps (large, decorative). Rule #3A362E is for lines only, never text.
+
+## Lighthouse (mobile, production https://hopium-phi.vercel.app, Lighthouse 12.2.1, headless Chromium)
+
+Production build 13cbd1d (self-hosted fonts). The price-strip CLS fix (983a657, CLS 0.18 -> 0 measured locally) is
+merged to main but not yet deployed: Vercel's free-tier deployment cap for the day was reached. It deploys with the next
+push to main that touches web/.
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|
+| / | 91 | 100 | 96 | 100 | 2.0 s | 0.182 |
+| /receipts | 91 | 100 | 96 | 100 | 2.1 s | 0.182 |
+| /how-it-works | 100 | 100 | 96 | 100 | 1.9 s | 0.023 |
+| /portfolio | 91 | 100 | 96 | 100 | 1.8 s | 0.182 |
+| /lab | 91 | 100 | 96 | 100 | 1.9 s | 0.182 |
+| /case-study | 91 | 100 | 96 | 100 | 1.8 s | 0.18 |
+| /terms | 100 | 100 | 96 | 100 | 1.8 s | 0.023 |
+
+Earlier build (Google Fonts stylesheet): /receipts 83 performance; fixed by next/font/local.
+
+Decision: Vercel ignored-build-step now builds only `main` and `demo`, and only when `web/` changed (branch pushes and
+hourly bot commits were burning the free deployment quota).
