@@ -1,0 +1,9 @@
+{"ran_at": "2026-11-04T08:36:42Z", "runner": "GitHub Actions 1000000001", "results": {
+"binance-vision-spot": 200,
+"binance-spot": 451,
+"binance-futures": 451,
+"bybit": 403,
+"deribit-funding": 200,
+"kraken-futures": 200,
+"coinbase": 200,
+"fear-greed": 200}}

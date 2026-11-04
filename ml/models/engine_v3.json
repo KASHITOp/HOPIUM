@@ -1,0 +1,243 @@
+{
+ "config": {
+  "h": 12,
+  "k": 0.01,
+  "model": "logreg",
+  "groups": [
+   "base",
+   "flow",
+   "mtf",
+   "volreg",
+   "cross",
+   "cal",
+   "fund"
+  ],
+  "sides": "long_short",
+  "regime": false,
+  "tune": false,
+  "lgbm": {
+   "num_leaves": 15,
+   "min_child_samples": 300
+  },
+  "note": "stage1 grid"
+ },
+ "threshold": 0.16,
+ "threshold_source": "inner validation (last 90 days)",
+ "cells": null,
+ "version": "v3-12h-logreg-20261104",
+ "trained_through": "2026-11-03 19:00:00+00:00",
+ "label_code": "C",
+ "label": "Does not beat trading fees in testing.",
+ "built_at": "2026-11-04T09:28:54.221577+00:00",
+ "walk_forward": {
+  "key": "a2dedaa2",
+  "dev_period": "2024-09..2026-04",
+  "big_move_direction_acc": 0.5397767066287644,
+  "big_move_n": 24273,
+  "folds_trading": 16,
+  "secs": 210,
+  "trades": 988,
+  "net_0.20%": 0.9103810414432154,
+  "mean_net_trade": 0.0020339665763096752,
+  "mean_gross_trade": 0.004033966576309677,
+  "win_rate": 0.4979757085020243,
+  "avg_win": 0.022514016020210807,
+  "avg_loss": -0.01828092117852774,
+  "sharpe": 1.269887584025797,
+  "sharpe_ci95": [
+   0.017568412591276266,
+   2.498754183429653
+  ],
+  "max_dd": 0.23108793548923745,
+  "long_share": 0.6882591093117408,
+  "per_coin": {
+   "BTC": {
+    "n": 240,
+    "net_sum": -0.08769891771084734
+   },
+   "ETH": {
+    "n": 342,
+    "net_sum": 0.7955763885210112
+   },
+   "SOL": {
+    "n": 406,
+    "net_sum": 1.3016815065837957
+   }
+  },
+  "per_year": {
+   "2024": {
+    "n": 71,
+    "net_sum": 0.5559016123982635
+   },
+   "2025": {
+    "n": 913,
+    "net_sum": 1.4977816122512646
+   },
+   "2026": {
+    "n": 4,
+    "net_sum": -0.044124247255568516
+   }
+  },
+  "best_month_share_of_profit": 0.3292529097609577,
+  "months_positive": "10/16",
+  "net_0.15%": 1.2866933659072282,
+  "net_0.10%": 1.7391260949551026
+ },
+ "walk_forward_folds": [
+  {
+   "month": "2024-09",
+   "t": 0.35,
+   "cells": null,
+   "trades": 2,
+   "net_sum": 0.0699835514565117
+  },
+  {
+   "month": "2024-10",
+   "t": 0.5,
+   "cells": null,
+   "trades": 0,
+   "net_sum": 0.0
+  },
+  {
+   "month": "2024-11",
+   "t": 0.4,
+   "cells": null,
+   "trades": 4,
+   "net_sum": 0.08793360181937537
+  },
+  {
+   "month": "2024-12",
+   "t": 0.16,
+   "cells": null,
+   "trades": 65,
+   "net_sum": 0.39798445912237645
+  },
+  {
+   "month": "2025-01",
+   "t": 0.16,
+   "cells": null,
+   "trades": 64,
+   "net_sum": 0.3648193433679351
+  },
+  {
+   "month": "2025-02",
+   "t": 0.2,
+   "cells": null,
+   "trades": 56,
+   "net_sum": 0.35586781525596056
+  },
+  {
+   "month": "2025-03",
+   "t": 0.16,
+   "cells": null,
+   "trades": 66,
+   "net_sum": 0.24905803015213068
+  },
+  {
+   "month": "2025-04",
+   "t": 0.2,
+   "cells": null,
+   "trades": 38,
+   "net_sum": 0.661653140643216
+  },
+  {
+   "month": "2025-05",
+   "t": 0.06,
+   "cells": null,
+   "trades": 145,
+   "net_sum": -0.0958241018652794
+  },
+  {
+   "month": "2025-06",
+   "t": 0.0,
+   "cells": null,
+   "trades": 180,
+   "net_sum": -0.12505267106988552
+  },
+  {
+   "month": "2025-07",
+   "t": 0.04,
+   "cells": null,
+   "trades": 149,
+   "net_sum": 0.29026440689158367
+  },
+  {
+   "month": "2025-08",
+   "t": 0.13,
+   "cells": null,
+   "trades": 66,
+   "net_sum": 0.047935427578314274
+  },
+  {
+   "month": "2025-09",
+   "t": 0.16,
+   "cells": null,
+   "trades": 32,
+   "net_sum": 0.06861723061414629
+  },
+  {
+   "month": "2025-10",
+   "t": 0.16,
+   "cells": null,
+   "trades": 48,
+   "net_sum": -0.14777018728693436
+  },
+  {
+   "month": "2025-11",
+   "t": 0.16,
+   "cells": null,
+   "trades": 68,
+   "net_sum": -0.14517532088611917
+  },
+  {
+   "month": "2025-12",
+   "t": 0.4,
+   "cells": null,
+   "trades": 1,
+   "net_sum": -0.026611501143803618
+  },
+  {
+   "month": "2026-01",
+   "t": null,
+   "cells": null,
+   "trades": 0,
+   "net_sum": 0.0
+  },
+  {
+   "month": "2026-02",
+   "t": null,
+   "cells": null,
+   "trades": 0,
+   "net_sum": 0.0
+  },
+  {
+   "month": "2026-03",
+   "t": null,
+   "cells": null,
+   "trades": 0,
+   "net_sum": 0.0
+  },
+  {
+   "month": "2026-04",
+   "t": 0.2,
+   "cells": null,
+   "trades": 4,
+   "net_sum": -0.044124247255568516
+  }
+ ],
+ "holdout": {
+  "key": "a2dedaa2",
+  "threshold": null,
+  "cells": null,
+  "params": {
+   "num_leaves": 15,
+   "min_child_samples": 300
+  },
+  "holdout": "2026-05-01 00:00:00+00:00 .. 2026-11-03 19:00:00+00:00",
+  "rows": 13452,
+  "trades": 0,
+  "net_0.20%": 0.0,
+  "net_0.15%": 0.0,
+  "net_0.10%": 0.0
+ }
+}

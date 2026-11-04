@@ -1,0 +1,42 @@
+name: probe-data-sources
+# Which data sources answer from a GitHub-hosted (US) runner? Writes ml/ops/probe.json and commits it back.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/hopium-engine-v3]
+    paths: [.github/workflows/probe.yml]
+permissions: { contents: write }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p ml/ops
+          now=$(date +%s)
+          {
+            echo "{\"ran_at\": \"$(date -u +%FT%TZ)\", \"runner\": \"$RUNNER_NAME\", \"results\": {"
+            first=1
+            while read -r name url; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" -m 20 "$url" || echo 000)
+              [ $first = 1 ] || echo ","; first=0
+              printf '"%s": %s' "$name" "$code"
+            done <<EOF2
+          binance-vision-spot https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=1
+          binance-spot https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=1
+          binance-futures https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1
+          bybit https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT
+          deribit-funding https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=BTC-PERPETUAL&start_timestamp=$(( (now-7200)*1000 ))&end_timestamp=$(( now*1000 ))
+          kraken-futures https://futures.kraken.com/derivatives/api/v3/tickers
+          coinbase https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600
+          fear-greed https://api.alternative.me/fng/?limit=1
+          EOF2
+            echo "}}"
+          } > ml/ops/probe.json
+          cat ml/ops/probe.json
+      - run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/ops/probe.json
+          git commit -m "ops: probe results $(date -u +%FT%TZ)" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -1,0 +1,26 @@
+{
+ "key": "a2dedaa2",
+ "config": {
+  "h": 12,
+  "k": 0.01,
+  "model": "logreg",
+  "groups": [
+   "base",
+   "flow",
+   "mtf",
+   "volreg",
+   "cross",
+   "cal",
+   "fund"
+  ],
+  "sides": "long_short",
+  "regime": false,
+  "tune": false,
+  "lgbm": {
+   "num_leaves": 15,
+   "min_child_samples": 300
+  },
+  "note": "stage1 grid"
+ },
+ "used_at": "2026-11-04T09:27:51.122439+00:00"
+}

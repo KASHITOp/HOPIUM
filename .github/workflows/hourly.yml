@@ -1,0 +1,46 @@
+name: hourly
+# predict -> grade -> candle cache -> publish model row. Idempotent: the DB rejects duplicate
+# (coin, horizon, candle_close_time) rows and inserts > 20 min late; predict.py skips and logs late starts.
+on:
+  schedule:
+    - cron: "2 * * * *"
+  workflow_dispatch:
+concurrency: { group: hourly, cancel-in-progress: false }
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.SUPABASE_PROJECT_LINK }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ROLE_SERVICE_KEY }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: ml/requirements.txt }
+      - run: pip install -r ml/requirements.txt
+      - name: Predict (skips and logs if late)
+        id: predict
+        working-directory: ml
+        run: python -m hopium.predict
+      - name: Grade matured predictions
+        if: always()
+        working-directory: ml
+        run: python -m hopium.grade
+      - name: Refresh candles cache
+        if: always()
+        working-directory: ml
+        run: python -m hopium.cache_candles --days 3
+      - name: Publish model row (idempotent)
+        if: always()
+        working-directory: ml
+        run: python -m hopium.publish_model
+      - name: Commit ops output
+        if: always()
+        run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/ops/last_predict.json ml/ops/last_grade.json 2>/dev/null || true
+          git commit -m "ops: hourly $(date -u +%FT%H:%MZ)" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done

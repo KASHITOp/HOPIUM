@@ -1,0 +1,35 @@
+name: retrain
+on:
+  schedule:
+    - cron: "17 2 * * 0"   # Sundays 02:17 UTC
+  workflow_dispatch:
+permissions: { contents: write }
+concurrency: { group: retrain, cancel-in-progress: false }
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults: { run: { working-directory: ml } }
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.SUPABASE_PROJECT_LINK }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ROLE_SERVICE_KEY }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: ml/requirements.txt }
+      - run: pip install -r requirements.txt pytest
+      - name: Lookahead + rule tests
+        run: python -m pytest -q
+      - name: Refresh data, walk-forward check (leakage gate), rebuild live bundle
+        run: python -m research.weekly
+      - name: Publish model row
+        run: python -m hopium.publish_model
+      - name: Commit model artifacts
+        working-directory: .
+        run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/models/engine_v3.pkl ml/models/engine_v3.json ml/EXPERIMENTS.md ml/research/results.jsonl
+          git commit -m "Weekly retrain $(date -u +%F)" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done

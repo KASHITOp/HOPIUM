@@ -1,0 +1,256 @@
+{
+ "checked_at": "2026-11-04T09:32:40.303430+00:00",
+ "checks": [
+  {
+   "check": "secrets present",
+   "pass": true,
+   "detail": "project link recognised"
+  },
+  {
+   "check": "REST reachable with service key",
+   "pass": true,
+   "detail": "HTTP 200"
+  },
+  {
+   "check": "table predictions + columns",
+   "pass": false,
+   "detail": "missing: ['p_big_up', 'p_big_down', 'score', 'threshold', 'k']"
+  },
+  {
+   "check": "table run_log + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "table model_runs + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "table candles_cache + columns",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "hopium_schema_report() installed",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "predictions: RLS enabled",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "predictions: public SELECT policy only",
+   "pass": true,
+   "detail": "policies: [{'cmd': 'r', 'name': 'public read', 'roles': ['authenticated', 'anon']}]"
+  },
+  {
+   "check": "predictions: anon has no write privileges",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "predictions: constraints",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "predictions: immutability triggers",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "run_log: RLS enabled",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "run_log: public SELECT policy only",
+   "pass": true,
+   "detail": "policies: [{'cmd': 'r', 'name': 'public read', 'roles': ['authenticated', 'anon']}]"
+  },
+  {
+   "check": "run_log: anon has no write privileges",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "run_log: constraints",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "model_runs: RLS enabled",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "model_runs: public SELECT policy only",
+   "pass": true,
+   "detail": "policies: [{'cmd': 'r', 'name': 'public read', 'roles': ['authenticated', 'anon']}]"
+  },
+  {
+   "check": "model_runs: anon has no write privileges",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "model_runs: constraints",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "candles_cache: RLS enabled",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "candles_cache: public SELECT policy only",
+   "pass": true,
+   "detail": "policies: [{'cmd': 'r', 'name': 'public read', 'roles': ['authenticated', 'anon']}]"
+  },
+  {
+   "check": "candles_cache: anon has no write privileges",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "candles_cache: constraints",
+   "pass": true,
+   "detail": ""
+  }
+ ],
+ "ok": false,
+ "report": {
+  "tables": {
+   "run_log": {
+    "policies": [
+     {
+      "cmd": "r",
+      "name": "public read",
+      "roles": [
+       "authenticated",
+       "anon"
+      ]
+     }
+    ],
+    "triggers": [],
+    "constraints": [
+     "run_log_job_check",
+     "run_log_pkey",
+     "run_log_status_check"
+    ],
+    "rls_enabled": true,
+    "row_estimate": -1,
+    "anon_privileges": [
+     "REFERENCES",
+     "SELECT",
+     "TRIGGER"
+    ]
+   },
+   "model_runs": {
+    "policies": [
+     {
+      "cmd": "r",
+      "name": "public read",
+      "roles": [
+       "authenticated",
+       "anon"
+      ]
+     }
+    ],
+    "triggers": [],
+    "constraints": [
+     "model_runs_pkey"
+    ],
+    "rls_enabled": true,
+    "row_estimate": -1,
+    "anon_privileges": [
+     "REFERENCES",
+     "SELECT",
+     "TRIGGER"
+    ]
+   },
+   "predictions": {
+    "policies": [
+     {
+      "cmd": "r",
+      "name": "public read",
+      "roles": [
+       "authenticated",
+       "anon"
+      ]
+     }
+    ],
+    "triggers": [
+     "predictions_bd",
+     "predictions_bi",
+     "predictions_bt",
+     "predictions_bu"
+    ],
+    "constraints": [
+     "candle_on_the_hour",
+     "grading_complete",
+     "hit_matches_outcome",
+     "inserted_after_close",
+     "inserted_on_time",
+     "move_matches_prices",
+     "outcome_matches_move",
+     "predictions_coin_check",
+     "predictions_coin_horizon_candle_close_time_key",
+     "predictions_horizon_check",
+     "predictions_outcome_check",
+     "predictions_pkey",
+     "predictions_price_at_call_check",
+     "predictions_prob_up_check",
+     "predictions_signal_check",
+     "signal_matches_prob",
+     "target_matches_horizon"
+    ],
+    "rls_enabled": true,
+    "row_estimate": -1,
+    "anon_privileges": [
+     "REFERENCES",
+     "SELECT",
+     "TRIGGER"
+    ]
+   },
+   "candles_cache": {
+    "policies": [
+     {
+      "cmd": "r",
+      "name": "public read",
+      "roles": [
+       "authenticated",
+       "anon"
+      ]
+     }
+    ],
+    "triggers": [],
+    "constraints": [
+     "candles_cache_coin_check",
+     "candles_cache_pkey"
+    ],
+    "rls_enabled": true,
+    "row_estimate": -1,
+    "anon_privileges": [
+     "REFERENCES",
+     "SELECT",
+     "TRIGGER"
+    ]
+   }
+  },
+  "functions": [
+   "hopium_no_delete",
+   "hopium_schema_report",
+   "predictions_before_insert",
+   "predictions_before_update"
+  ],
+  "checked_at": "2026-11-04T09:32:42.341256+00:00",
+  "server_version": "17.11"
+ },
+ "passed": 23,
+ "total": 24
+}
