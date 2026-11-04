@@ -1,0 +1,13 @@
+{
+ "checked_at": "2026-11-04T08:57:50.694375+00:00",
+ "checks": [
+  {
+   "check": "secrets present",
+   "pass": false,
+   "detail": "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing"
+  }
+ ],
+ "ok": false,
+ "passed": 0,
+ "total": 1
+}
