@@ -25,3 +25,15 @@ rows whose move exceeded k (leakage gate: > 65% fails).
 | 57408c26 | 12h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 1000 | -0.1% | -34.0% | -22.7% | -9.5% | -0.69 | 52.9% | stage1 grid |
 | c28f07e8 | 24h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 1030 | +0.0% | -2.5% | +16.0% | +37.9% | 0.15 | 52.0% | stage1 grid |
 | 29a51ce0 | 24h | 0.5% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 1091 | -0.2% | -62.3% | -54.8% | -45.8% | -1.33 | 51.8% | stage1 grid |
+| 7c7d420e | 1h | 0.5% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 492 | -0.0% | -9.4% | -1.7% | +7.2% | -0.37 | 53.0% | stage1 grid |
+| 8ab7e780 | 1h | 0.3% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 559 | -0.0% | -1.7% | +8.7% | +20.6% | -0.01 | 52.6% | stage1 grid |
+| 87b963fe | 4h | 0.3% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 763 | -0.1% | -13.8% | -0.3% | +15.6% | -0.30 | 52.3% | stage1 grid |
+| db10b329 | 1h | 1.0% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 214 | +0.0% | +0.2% | +3.7% | +7.5% | 0.06 | 54.5% | stage1 grid |
+| 4512b238 | 4h | 1.0% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 433 | -0.0% | -7.6% | -0.5% | +7.4% | -0.19 | 53.5% | stage1 grid |
+| 6efa35e5 | 4h | 0.5% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 684 | -0.1% | -13.3% | -2.7% | +9.7% | -0.34 | 52.6% | stage1 grid |
+| 819e42c1 | 12h | 0.5% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 1067 | +0.0% | -12.0% | +5.8% | +27.4% | -0.03 | 52.7% | stage1 grid |
+| bd904b57 | 12h | 0.3% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 922 | -0.1% | -23.1% | -9.9% | +5.8% | -0.29 | 52.5% | stage1 grid |
+| a2dedaa2 | 12h | 1.0% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 988 | +0.2% | +91.0% | +128.7% | +173.9% | 1.27 | 54.0% | stage1 grid |
+| 37cbcdc4 | 24h | 0.3% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 436 | -0.0% | -13.0% | -6.3% | +0.9% | -0.11 | 51.1% | stage1 grid |
+| 93535d29 | 24h | 0.5% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 535 | -0.2% | -39.5% | -33.8% | -27.6% | -0.87 | 51.1% | stage1 grid |
+| 03224c30 | 24h | 1.0% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 648 | +0.0% | -11.8% | -2.0% | +8.9% | -0.13 | 51.7% | stage1 grid |

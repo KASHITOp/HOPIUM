@@ -1,0 +1,29 @@
+name: db-check
+# Read-only verification of the Supabase setup. Commits ml/ops/db_check.json back to the branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/hopium-engine-v3]
+    paths: [.github/workflows/db-check.yml, ml/hopium/db_check.py, supabase/**]
+permissions: { contents: write }
+concurrency: { group: ops-commit, cancel-in-progress: false }
+jobs:
+  db-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - name: Check schema (read-only)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python ml/hopium/db_check.py
+      - name: Commit result
+        run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/ops/db_check.json
+          git commit -m "ops: db check $(date -u +%FT%TZ)" || exit 0
+          for i in 1 2 3; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
