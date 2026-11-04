@@ -62,7 +62,9 @@ def test_v3_no_lookahead(hours):
 def test_v3_live_window_parity():
     candles, fng, funding = synthetic()
     full = build_v3(candles, fng, funding)
-    short = build_v3({c: d.tail(LOOKBACK_H) for c, d in candles.items()}, fng, funding)
+    # live inference fetches only the last LOOKBACK_H hours of candles AND of Deribit funding
+    short = build_v3({c: d.tail(LOOKBACK_H) for c, d in candles.items()}, fng,
+                     {c: f.tail(LOOKBACK_H) for c, f in funding.items()})
     for coin in COINS:
         x, y = full[full.coin == coin].iloc[-1], short[short.coin == coin].iloc[-1]
         for f in FEATS:

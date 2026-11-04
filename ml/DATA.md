@@ -9,17 +9,30 @@ makes the backtest a lie.
 
 ## Sources
 
-| Source | Endpoint | Reachable from US runners | Used for |
-|---|---|---|---|
-| Binance spot 1h klines | `data-api.binance.vision/api/v3/klines` | yes (public market-data mirror) | **features, entry, exit, grading** |
-| Binance spot 1h klines | `api.binance.com/api/v3/klines` | no (HTTP 451 "restricted location") | second host only, tried after the mirror |
-| Coinbase Exchange candles | `api.exchange.coinbase.com/products/{COIN}-USD/candles` | yes | **history fallback only** (see below) |
-| Fear & Greed | `api.alternative.me/fng` | yes | feature (previous UTC day's value) |
-| Binance USDⓈ-M futures REST (funding, OI) | `fapi.binance.com` | no (geo-blocked) | not used |
-| Bybit public API | `api.bybit.com` | no (CloudFront geo-block) | not used |
-| Binance futures bulk archives | `data.binance.vision/data/futures/um/...` | yes, but published with a delay (daily files about a day late, funding monthly) | **research only** |
+Reachability measured from a GitHub-hosted runner by `.github/workflows/probe.yml` (run #1, 2026-11-04):
 
-## Why funding rate and open interest are not features
+| Source | Endpoint | From US runner | Used for |
+|---|---|---|---|
+| Binance spot 1h klines | `data-api.binance.vision/api/v3/klines` | **200** | **features, entry, exit, grading** (primary) |
+| Binance spot 1h klines | `api.binance.com/api/v3/klines` | 451 | not used live |
+| Binance USDⓈ-M futures | `fapi.binance.com` | 451 | not used |
+| Bybit | `api.bybit.com` | 403 | not used |
+| Deribit perpetual funding | `www.deribit.com/api/v2/public/get_funding_rate_history` | **200** | **live feature group `fund`** (hourly, history since 2019) |
+| Kraken Futures | `futures.kraken.com` | **200** | allowed, not yet a feature (funding history only from 2025-10) |
+| Coinbase Exchange candles | `api.exchange.coinbase.com` | **200** | candle fallback (history rebuild only) |
+| Fear & Greed | `api.alternative.me/fng` | **200** | feature (previous UTC day's value) |
+| Binance futures bulk archives | `data.binance.vision/data/futures/um/...` | n/a | research only (published with a delay) |
+
+## Funding: Deribit, not Binance
+
+Binance funding/OI are unreachable live, so v2 dropped them. Deribit's public funding endpoint answers from
+the runner and has hourly history back years, so v3 uses it (`funding_1h`, `funding_24h`, `funding_z`).
+Each Deribit row is stamped at the END of its funding hour, so it is joined at that time or later only.
+Open interest has no public history on Deribit or Kraken, so OI remains out. Top future upgrade: an
+always-on collector (e.g. a Mumbai-region edge function) that records Binance funding/OI every hour
+so a history builds up.
+
+## Why Binance funding rate and open interest are not features
 
 Both were in the first model version, pulled from the bulk archives with an artificial publication lag
 (OI lagged 48h, funding = previous calendar month). That kept training honest, but the values were stale
