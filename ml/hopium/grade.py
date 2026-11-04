@@ -1,54 +1,54 @@
-"""Grade predictions whose target_time has passed. Writes to `outcomes` only.
+"""Grade every ungraded prediction whose target_time has passed.
 
-Outcome price = close of the 1h candle that ends at target_time.
+Exit price = close of the Binance spot 1h candle that ENDS at target_time (opens at target_time - 1h).
+Only grading columns are written; the database refuses anything else and refuses re-grading.
+
+python -m hopium.grade
 """
 from __future__ import annotations
 
+import sys
+
 import pandas as pd
 
-import db
-import fetch
-from config import FLAT_THRESHOLD
+from . import db, fetch
+from .grading import grade
 
 
-def close_at(coin, target):
-    """Close of the candle [target-1h, target)."""
-    start = target - pd.Timedelta(hours=1)
-    c = fetch.fetch_candles(coin, int(start.timestamp() * 1000))
-    c = c[c.ts == start]
-    return None if c.empty else float(c.close.iloc[0])
+def exit_price(coin: str, target: pd.Timestamp, cache: dict) -> float | None:
+    key = (coin, target)
+    if key not in cache:
+        start = target - pd.Timedelta(hours=1)
+        c = fetch.binance_klines(coin, start, target)
+        c = c[c.ts == start]
+        cache[key] = float(c.close.iloc[0]) if len(c) else None
+    return cache[key]
 
 
-def grade_row(p, price):
-    r = price / p["price_at_call"] - 1
-    actual = "FLAT" if abs(r) < FLAT_THRESHOLD else ("UP" if r > 0 else "DOWN")
-    hit = None if p["signal"] == "NO-CALL" or actual == "FLAT" else (p["signal"] == actual)
-    mc = None if actual == "FLAT" else ((p["prob_up"] > 0.5) == (actual == "UP"))
-    return {"prediction_id": p["id"], "price_at_target": price, "fwd_ret": r, "actual": actual,
-            "hit": hit, "model_correct": mc}
-
-
-def main():
-    now = pd.Timestamp.now(tz="UTC")
-    pending = db.select("graded", {"select": "id,coin,signal,prob_up,price_at_call,target_time",
-                                   "actual": "is.null", "target_time": f"lte.{now.isoformat()}",
-                                   "order": "target_time.asc", "limit": "500"})
-    print(f"{len(pending)} pending")
-    out, cache = [], {}
-    for p in pending:
-        t = pd.Timestamp(p["target_time"]).tz_convert("UTC")
-        key = (p["coin"], t)
-        if key not in cache:
-            cache[key] = close_at(p["coin"], t)
-        if cache[key] is None:
-            continue  # candle not closed / not available yet
-        out.append(grade_row(p, cache[key]))
-    if out:
-        db.insert("outcomes", out)
-    for o in out:
-        print(o)
-    print(f"graded {len(out)}")
+def main() -> int:
+    now = pd.Timestamp.now(tz="UTC").isoformat()
+    try:
+        pending = db.select("predictions", {
+            "select": "id,coin,horizon,signal,price_at_call,target_time",
+            "graded_at": "is.null", "target_time": f"lte.{now}", "order": "target_time.asc", "limit": "1000"})
+        print(f"{len(pending)} predictions due")
+        cache, done = {}, 0
+        for p in pending:
+            px = exit_price(p["coin"], pd.Timestamp(p["target_time"]).tz_convert("UTC"), cache)
+            if px is None:
+                print(f"  #{p['id']}: exit candle not available yet")
+                continue
+            g = grade(p["signal"], float(p["price_at_call"]), px)
+            res = db.patch("predictions", {"id": f"eq.{p['id']}", "graded_at": "is.null"}, g)
+            done += len(res or [])
+            print(f"  #{p['id']} {p['coin']} {p['horizon']} {p['signal']}: {g['outcome']} ({g['move']:+.4%})")
+        db.log_run("grade", "ok", detail=f"{done} graded")
+        return 0
+    except Exception as e:
+        print(f"ERROR: {e}")
+        db.log_run("grade", "error", detail=repr(e))
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
