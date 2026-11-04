@@ -19,8 +19,8 @@ export default {
       pencilText: "#898377", // pencil hue lightened for small text (4.5:1)
     },
     fontFamily: {
-      display: ['"Bricolage Grotesque"', "ui-sans-serif", "sans-serif"],
-      mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
+      display: ["var(--font-display)", "ui-sans-serif", "sans-serif"],
+      mono: ["var(--font-mono)", "ui-monospace", "monospace"],
     },
     borderRadius: { none: "0", sm: "2px", DEFAULT: "2px" },
     extend: {

@@ -5,7 +5,7 @@ import { signedPct } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Case study", description: "HOPIUM in two minutes: problem, approach, architecture, decisions, honest results." };
 
-const F = '"IBM Plex Mono", monospace';
+const F = "var(--font-mono), monospace";
 
 function Box({ x, y, w, h, title, lines }: { x: number; y: number; w: number; h: number; title: string; lines: string[] }) {
   return (

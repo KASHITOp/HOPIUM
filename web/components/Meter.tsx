@@ -29,10 +29,10 @@ export function Meter({ lean, direction, historic, threshold = 0.16 }: { lean: n
         {ticks.map((t) => (
           <g key={t}>
             <line x1="30" x2={Math.round(t * 100) % 10 === 0 ? 38 : 35} y1={y(t)} y2={y(t)} stroke="#8F897C" strokeWidth="1" />
-            <text x="41" y={y(t) + 3.5} fontSize="9" fill="#8F897C" fontFamily='"IBM Plex Mono", monospace'>{Math.round(t * 100)}</text>
+            <text x="41" y={y(t) + 3.5} fontSize="9" fill="#8F897C" fontFamily="var(--font-mono), monospace">{Math.round(t * 100)}</text>
           </g>
         ))}
-        <text x="58" y={y(callLine) + 3.5} fontSize="8" fill="#D4614C" fontFamily='"IBM Plex Mono", monospace'>call</text>
+        <text x="58" y={y(callLine) + 3.5} fontSize="8" fill="#D4614C" fontFamily="var(--font-mono), monospace">call</text>
       </svg>
       <figcaption className="max-w-[220px] pt-1">
         <div className="label">Hopium Meter</div>
