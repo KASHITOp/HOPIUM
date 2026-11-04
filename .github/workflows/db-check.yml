@@ -17,14 +17,11 @@ jobs:
       - run: pip install requests
       - name: Check schema (read-only)
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          ALT_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ALT_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_PROJECT_LINK }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_ROLE_SERVICE_KEY }}
         run: |
           # diagnostics only: lengths, never values
-          echo "SUPABASE_URL len=${#SUPABASE_URL}; SUPABASE_SERVICE_ROLE_KEY len=${#SUPABASE_SERVICE_KEY}; SUPABASE_SERVICE_KEY len=${#ALT_SERVICE_KEY}; SUPABASE_KEY len=${#ALT_KEY}"
-          if [ -z "$SUPABASE_SERVICE_KEY" ] && [ -n "$ALT_SERVICE_KEY" ]; then export SUPABASE_SERVICE_KEY="$ALT_SERVICE_KEY"; fi
+          echo "SUPABASE_PROJECT_LINK len=${#SUPABASE_URL}; SUPABASE_ROLE_SERVICE_KEY len=${#SUPABASE_SERVICE_KEY}"
           python ml/hopium/db_check.py
       - name: Commit result
         if: always()

@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 15
     defaults: { run: { working-directory: ml } }
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_PROJECT_LINK }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_ROLE_SERVICE_KEY }}
       PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4

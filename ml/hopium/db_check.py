@@ -12,7 +12,10 @@ from pathlib import Path
 
 import requests
 
-URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from hopium.db import normalize_url  # noqa: E402
+
+URL = normalize_url(os.environ.get("SUPABASE_URL", ""))
 KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 OUT = Path(__file__).resolve().parent.parent / "ops" / "db_check.json"
 H = {"apikey": KEY, "Authorization": f"Bearer {KEY}"}
@@ -43,11 +46,11 @@ def main() -> int:
 
     if not URL or not KEY:
         check("secrets present", False,
-              f"SUPABASE_URL {'set' if URL else 'EMPTY'}, SUPABASE_SERVICE_ROLE_KEY {'set' if KEY else 'EMPTY'}; "
+              f"SUPABASE_PROJECT_LINK {'set' if URL else 'EMPTY'}, SUPABASE_ROLE_SERVICE_KEY {'set' if KEY else 'EMPTY'}; "
               f"other non-empty SUPABASE*/ALT_* env vars: {sorted(k for k in os.environ if k.startswith(('SUPABASE', 'ALT_')) and os.environ[k])}. "
               "Secrets must be repository Actions secrets (environment-scoped secrets are not visible to this job).")
         return finish(res)
-    check("secrets present", True)
+    check("secrets present", True, "project link recognised" if URL.endswith('.supabase.co') else "link not recognised as a Supabase project")
     # 1) tables + columns via PostgREST OpenAPI (read-only)
     r = requests.get(f"{URL}/rest/v1/", headers=H, timeout=30)
     check("REST reachable with service key", r.ok, f"HTTP {r.status_code}")

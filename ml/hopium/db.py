@@ -2,12 +2,27 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 
 import requests
 
-URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+URL = ""  # set below via normalize_url
 KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+
+
+
+def normalize_url(raw: str) -> str:
+    """Accept the API URL (https://<ref>.supabase.co), a dashboard link (.../project/<ref>) or a bare ref."""
+    raw = (raw or "").strip().rstrip("/")
+    m = re.search(r"/project/([a-z0-9]{15,})", raw) or re.fullmatch(r"([a-z0-9]{15,})", raw)
+    if m:
+        return f"https://{m.group(1)}.supabase.co"
+    m = re.match(r"(https://[a-z0-9]+\.supabase\.co)", raw)
+    return m.group(1) if m else raw
+
+
+URL = normalize_url(os.environ.get("SUPABASE_URL", ""))
 
 
 def configured() -> bool:
