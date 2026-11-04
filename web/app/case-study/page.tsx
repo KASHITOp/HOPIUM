@@ -63,8 +63,8 @@ export default function CaseStudy() {
       <h2 className="display mt-10 text-[30px] text-ink">The problem</h2>
       <p>
         Crypto &quot;signal&quot; sellers show winners and quietly delete losers, so their track records mean nothing. I wanted to build the
-        opposite: a forecaster whose every call is recorded before the outcome exists, graded automatically, and impossible to
-        edit, so its real skill (or lack of it) is visible to anyone.
+        opposite: a forecaster whose every call is recorded before the outcome exists, graded automatically, and protected
+        against edits by database rules, so its real skill (or lack of it) is visible to anyone.
       </p>
 
       <h2 className="display mt-10 text-[30px] text-ink">The approach</h2>
@@ -82,7 +82,7 @@ export default function CaseStudy() {
       <h2 className="display mt-10 text-[30px] text-ink">Decisions that mattered</h2>
       <ul className="mt-2 list-disc space-y-2 pl-5">
         <li><strong className="text-ink">Only live-reachable features.</strong> Binance futures data is geo-blocked from the US servers that run the jobs, so it was dropped even though it looked useful. Deribit funding answers from those servers, so it stayed, and removing it halved the walk-forward result.</li>
-        <li><strong className="text-ink">The database enforces honesty.</strong> CHECK constraints and triggers reject late inserts, signals that break the published rule, edits, deletes and re-grading. Application bugs cannot fake a receipt.</li>
+        <li><strong className="text-ink">The database enforces honesty.</strong> CHECK constraints and triggers reject late inserts, signals that break the published rule, edits, deletes and re-grading, so a bug in the jobs cannot quietly rewrite one. Someone with owner access to the database could still change those rules; there is no independent witness yet.</li>
         <li><strong className="text-ink">Late means skipped.</strong> If the hourly job starts more than 18 minutes after the candle closes, it logs a missed run instead of predicting a past it can half-see.</li>
         <li><strong className="text-ink">Ship rules agreed before the holdout.</strong> Profitable on the holdout: ship as unproven. Not profitable: ship anyway, labelled as not beating fees. No moving the goalposts.</li>
       </ul>
@@ -90,7 +90,7 @@ export default function CaseStudy() {
       <h2 className="display mt-10 text-[30px] text-ink">Honest results</h2>
       <p>
         The first model was right 52.8% of the time and still lost 92.6% in simulation, because its edge was 15 times smaller than
-        the fees. Retargeting to fee-sized moves produced a walk-forward result of {signedPct(wf["net_0.20%"], 1)} after fees over{" "}
+        the fees. Retargeting to fee-sized moves produced a walk-forward result of {signedPct(wf["net_0.20%"], 1)} (compounded, three equal sleeves, entry at reference closes, 0.2% fees, no slippage) over{" "}
         {wf.trades} trades (Sharpe {wf.sharpe!.toFixed(2)}, 95% CI {wf.sharpe_ci95![0]!.toFixed(2)} to {wf.sharpe_ci95![1]!.toFixed(2)}).
         The edge was concentrated in late 2024 and early 2025 and faded. On the locked holdout the model found nothing worth trading
         and made {engine.holdout.trades} trades. Label: <strong className="text-ink">{engine.label}</strong>
@@ -100,7 +100,7 @@ export default function CaseStudy() {
       <ul className="mt-2 list-disc space-y-1 pl-5">
         <li>Run an always-on collector for exchange funding and open interest so a real history exists to train on.</li>
         <li>Detect regimes from more than one market cycle before trusting any edge.</li>
-        <li>Let the public track record run for months; it is the only result that cannot be overfit.</li>
+        <li>Let the public track record run for months; a record made before outcomes exist cannot be fitted to them, though it is still a small sample.</li>
       </ul>
       <p className="mt-8">
         <Link className="ink-link" href="/receipts">See the live receipts</Link> or read <Link className="ink-link" href="/how-it-works">how it works</Link>.

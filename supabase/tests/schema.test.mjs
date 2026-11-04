@@ -56,5 +56,20 @@ await t("v3 12h with wrong target rejected", [ins3({ close: base + 21 * H, tgtH:
 await t("v3 prob_up must equal p_big_up", [`insert into predictions (coin,horizon,prob_up,signal,price_at_call,candle_close_time,target_time,model_version,p_big_up,p_big_down,score,threshold,k)
    values ('BTC','12h',0.9,'UP',100,'${iso(base + 21 * H)}','${iso(base + 33 * H)}','v3',0.4,0.1,0.3,0.16,0.01)`], false);
 await t("v3 threshold edit rejected", [`update predictions set threshold=0.01 where model_version='v3' and coin='BTC'`], false);
+
+// ---------------- trust v1 (provenance + lifecycle)
+const ins4 = ({ coin = "BTC", close = base + 40 * H, prov = "'live_prospective'", gen, start, cutoff }) =>
+  `insert into predictions (coin,horizon,prob_up,signal,price_at_call,candle_close_time,target_time,model_version,p_big_up,p_big_down,score,threshold,k,provenance,job_started_at,input_cutoff_at,generated_at,run_id,late_rule)
+   values ('${coin}','12h',0.2,'NO_CALL',100,'${iso(close)}','${iso(close + 12 * H)}','v3',0.2,0.1,0.1,0.16,0.01,${prov},
+   '${iso(start ?? close + 60e3)}','${iso(cutoff ?? close)}','${iso(gen ?? close + 90e3)}','123/1','late-v1')`;
+await t("trust: live_prospective with ordered lifecycle accepted", [now(base + 40 * H + 3 * 60e3), ins4({})], true);
+await t("trust: provenance 'demo' rejected (demo can never enter live table)", [ins4({ coin: "ETH", prov: "'demo'" })], false);
+await t("trust: provenance 'backtest' rejected", [ins4({ coin: "ETH", prov: "'backtest'" })], false);
+await t("trust: legacy NULL provenance still accepted (not assumed live)", [ins4({ coin: "ETH", prov: "null" })], true);
+await t("trust: generated_at after DB insert (+10 min) rejected", [ins4({ coin: "SOL", gen: base + 40 * H + 13 * 60e3 })], false);
+await t("trust: input cutoff after candle close rejected", [ins4({ coin: "SOL", cutoff: base + 40 * H + 60e3 })], false);
+await t("trust: generated before job start rejected", [ins4({ coin: "SOL", start: base + 40 * H + 10 * 60e3, gen: base + 40 * H + 60e3 })], false);
+await t("trust: provenance edit rejected", [`update predictions set provenance=null where candle_close_time='${iso(base + 40 * H)}' and coin='BTC'`], false);
+await t("trust: generated_at edit rejected", [`update predictions set generated_at=candle_close_time where candle_close_time='${iso(base + 40 * H)}' and coin='BTC'`], false);
 console.log(`\n${ok} passed, ${bad} failed`);
 if (bad) process.exit(1);

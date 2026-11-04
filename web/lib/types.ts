@@ -24,6 +24,13 @@ export interface Prediction {
   outcome: Outcome | null;
   hit: boolean | null;
   graded_at: string | null;
+  // trust v1 (migration 20261105000000). Absent/null on legacy rows = unknown, never backfilled.
+  provenance?: "live_prospective" | "demo" | null; // "demo" only ever comes from lib/mock.ts, never the database
+  job_started_at?: string | null; // application-reported (runner clock)
+  input_cutoff_at?: string | null; // application-reported
+  generated_at?: string | null; // application-reported
+  run_id?: string | null;
+  late_rule?: string | null;
 }
 
 export interface RunLog {
