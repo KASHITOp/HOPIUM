@@ -7,6 +7,7 @@ import { Stamp } from "./Stamp";
 const NAV = [
   ["/", "Counter"],
   ["/receipts", "Receipts"],
+  ["/coverage", "Coverage"],
   ["/portfolio", "Paper portfolio"],
   ["/lab", "Lab"],
   ["/how-it-works", "How it works"],

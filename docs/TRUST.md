@@ -79,3 +79,14 @@ next stamp, or withhold a prediction before it is committed (window: up to one h
 self-reported. Rows stored before the chain started were committed when the feature went live; their `committed_at`
 shows that, and they are not witnessed before then. **Witnessing active since:** the first `submitted` row in
 `witness_receipts` (shown on the home page). Before migration 20261105100000 is applied it is "not configured".
+
+## WS9 Coverage ledger: implemented, tested (`web/lib/coverage.ts`, page `/coverage`)
+
+Schedule `sched-v1`: one prediction per coin (BTC, ETH, SOL) at every UTC hour close, from the first live reference
+close to the latest closed hour; no planned maintenance declared. Each slot's state is derived from public tables only:
+row present -> published (graded / pending, NO CALL graded / pending); else `run_log` for that hour: `missed` ->
+skipped late (rule late-v1), `error` or `ok` without that coin's row -> failed; no log at all -> missing, no job ran
+(scheduler gap); inside the 20-minute window -> in progress (excluded from the denominator). Coverage % = published /
+settled expected slots, independent of accuracy. Consecutive missing hours with the same state merge into intervals.
+Retries cannot duplicate slots (DB unique key on coin/horizon/close; the ledger keys by slot). The 2026-11-04/05
+scheduler outage (REVIEW.md incident) appears as `no_job` and `late_skipped` intervals. Nothing is backfilled.

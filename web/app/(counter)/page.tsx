@@ -140,7 +140,7 @@ export default async function Home() {
         )}
       </section>
       <div className="pt-12">
-        <TrustPanel rows={rows} runs={runs.data.filter((r) => Date.parse(r.logged_at) > Date.now() - 30 * 86400e3)} mode={MODE} error={error} chain={{ ...chainRes.data, error: chainRes.error }} />
+        <TrustPanel rows={rows} runs={runs.data.filter((r) => Date.parse(r.logged_at) > Date.now() - 30 * 86400e3)} mode={MODE} error={error} chain={{ ...chainRes.data, error: chainRes.error }} allRuns={runs.data} />
       </div>
     </>
   );

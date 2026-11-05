@@ -4,6 +4,7 @@ import { WALK_FORWARD } from "@/lib/methodology";
 import { liveOnly, period, provenanceOf, PROVENANCE_LABEL } from "@/lib/provenance";
 import type { Mode } from "@/lib/data";
 import type { Prediction, RunLog } from "@/lib/types";
+import { ledger, summary } from "@/lib/coverage";
 import { verifyChain, witnessActiveSince, type Commitment, type WitnessReceipt } from "@/lib/commit";
 import { LocalTime } from "./LocalTime";
 
@@ -57,8 +58,9 @@ export function chainStatus(c: ChainState | undefined, mode: Mode, rows: Predict
   return { chain, witness, warn: !since || errs.length > 0 };
 }
 
-export function TrustPanel({ rows, runs, mode, error, chain }: { rows: Prediction[]; runs: RunLog[]; mode: Mode; error: string | null; chain?: ChainState }) {
+export function TrustPanel({ rows, runs, mode, error, chain, allRuns }: { rows: Prediction[]; runs: RunLog[]; mode: Mode; error: string | null; chain?: ChainState; allRuns?: RunLog[] }) {
   const cs = chainStatus(chain, mode, rows);
+  const cov = summary(ledger(mode === "mock" ? [] : liveOnly(rows), allRuns ?? runs));
   const live = mode === "mock" ? [] : liveOnly(rows);
   const span = period(live);
   const labelled = live.filter((r) => provenanceOf(r) === "live_prospective").length;
@@ -72,7 +74,7 @@ export function TrustPanel({ rows, runs, mode, error, chain }: { rows: Predictio
         <Row k="live tracking period (reference closes, UTC)" v={span ? <><LocalTime iso={span.start} /> to <LocalTime iso={span.end} /></> : "no live receipts yet"} />
         <Row k="provenance" v={live.length ? `${labelled} labelled ${PROVENANCE_LABEL.live_prospective}; ${live.length - labelled} ${PROVENANCE_LABEL.legacy_live}` : "n/a"} />
         <Row k="current model" v={`${engine.version} (threshold ${engine.threshold})`} />
-        <Row k="prediction runs, last 30 days" v={mode === "mock" ? "demo" : `${ok} ok, ${missed} skipped late, ${err} failed. Per-slot coverage ledger: not built yet.`} />
+        <Row k="publication coverage" v={mode === "mock" ? "demo" : cov.pct === null ? "no live slots yet" : <>{(cov.pct * 100).toFixed(1)}% of {cov.expected} expected coin-hour slots since launch published; {cov.expected - cov.published} missing, each with a reason (last 30 days of jobs: {ok} ok, {missed} skipped late, {err} failed). <Link className="ink-link" href="/coverage">ledger</Link></>} warn={cov.pct !== null && cov.pct < 0.9} />
         <Row k="backtest headline" v={<>+{(WALK_FORWARD.figure * 100).toFixed(1)}% is a compounded 3-sleeve simulation at reference closes; holdout made {engine.holdout.trades} trades. <Link className="ink-link" href="/how-it-works#method">method</Link></>} />
         <Row k="timestamps" v="insert and grading times come from the database clock; generation times are the job's own report. None are independently witnessed." />
         <Row k="hash chain" v={cs.chain} warn={cs.warn && !chain?.commitments.length} />
