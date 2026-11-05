@@ -38,3 +38,44 @@ rejects inserts more than 20 min after the close.
 Implemented and tested (PGlite): no edits to the prediction payload, provenance or lifecycle fields; grade once, only after
 `target_time`; no deletes or truncate; anon is SELECT-only. Not prevented: anyone with the database owner or service-role
 key can drop triggers or constraints. There is no hash chain or independent witness yet (planned, WS10).
+
+# Trust v2 (phase 2)
+
+## WS10 Tamper evidence: implemented, tested; witness active only once the migration is applied
+
+**Scheme `hopium-pred-v1`** (`ml/hopium/commit.py`, twin `web/lib/commit.ts`, shared test vector).
+Canonical text = JSON with sorted keys and no whitespace; every value is a string or null. Numbers: 12 fixed decimals,
+trailing zeros removed (`70123.45` serialises as the exact double, `70123.449999999997`). Timestamps:
+`YYYY-MM-DDTHH:MM:SS.ffffffZ`, UTC only. Fields: id, coin, horizon, signal, prob_up, p_big_up, p_big_down, score,
+threshold, k, price_at_call, candle_close_time, target_time, inserted_at, model_version, provenance, job_started_at,
+input_cutoff_at, generated_at, run_id, late_rule. Grading columns are excluded (they are set later and re-derivable
+from public Binance candles). A scheme change gets a new name; old commitments keep theirs.
+
+**Chain.** `payload_hash = sha256(canonical)`, `chain_hash = sha256(prev_hash + payload_hash)`, first prev = 64 zeros.
+The hourly job reads each new row back through the public API, serialises it and inserts it into `commitments`.
+The database recomputes the hash, checks the text describes that prediction, takes an advisory lock, assigns a gapless
+`seq` and computes the link itself; the table is append-only (update/delete/truncate rejected). Concurrent writers are
+serialised by the lock; duplicates are rejected by `unique(prediction_id)` (retries are no-ops).
+
+**Witness.** Each hour the chain head is written to `ml/ops/witness/chain-<seq>.txt` and stamped with OpenTimestamps
+(`ots stamp`; public calendars aggregate into Bitcoin). The `.ots` proof is committed to git; every attempt, failures
+included, is a `witness_receipts` row. Chosen after a probe from a GitHub runner (`ml/ops/witness_probe.json`,
+2026-11-05 15:31 UTC): OpenTimestamps a.pool 200, finney 200, b.pool unreachable, `ots stamp` succeeded; Rekor 200
+but needs a signing identity, so not used. Check a proof: `pip install opentimestamps-client`, then
+`ots verify ml/ops/witness/chain-<n>.txt.ots` (Bitcoin attestations appear after `ots upgrade`, a few hours later).
+
+| Protection | Status |
+|---|---|
+| Edited payload, deleted/reordered/duplicated link fails verification | tested (pytest, vitest, PGlite) |
+| DB recomputes hash and links; client cannot choose prev_hash/seq | tested (PGlite) |
+| Concurrent writers | implemented (advisory lock); PGlite is single-connection so not exercised concurrently |
+| Witness failure visible and retried | implemented (failed rows, hourly retry); tested only at the DB level |
+
+**What it proves.** After a commitment exists, changing that row's payload, or removing/reordering commitments, is
+detectable by anyone holding an earlier chain head. Once a head is OpenTimestamps-stamped, the operator cannot rewrite
+anything at or before it without the Bitcoin attestation failing.
+**What it does not prove.** The operator (database owner) can still drop triggers and rewrite the whole chain before the
+next stamp, or withhold a prediction before it is committed (window: up to one hour). Self-reported times stay
+self-reported. Rows stored before the chain started were committed when the feature went live; their `committed_at`
+shows that, and they are not witnessed before then. **Witnessing active since:** the first `submitted` row in
+`witness_receipts` (shown on the home page). Before migration 20261105100000 is applied it is "not configured".

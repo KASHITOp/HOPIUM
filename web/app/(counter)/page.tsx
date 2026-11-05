@@ -8,7 +8,7 @@ import { LocalTime } from "@/components/LocalTime";
 import { Meter } from "@/components/Meter";
 import { Receipt, ReceiptSkeleton } from "@/components/Receipt";
 import { SitOutPanel, Watched } from "@/components/SitOut";
-import { getPredictions, getRunLog } from "@/lib/data";
+import { getChain, getPredictions, getRunLog } from "@/lib/data";
 import engine from "@/lib/engine.json";
 import { price } from "@/lib/format";
 import { DISCLAIMER, historicConfident, lastDays, lean, tally } from "@/lib/summary";
@@ -73,7 +73,7 @@ function CoinRow({ coin, p, historic }: { coin: Coin; p: Prediction | undefined;
 }
 
 export default async function Home() {
-  const [{ data: rows, error }, runs] = await Promise.all([getPredictions(20000), getRunLog(3650)]);
+  const [{ data: rows, error }, runs, chainRes] = await Promise.all([getPredictions(20000), getRunLog(3650), getChain()]);
   const missed = runs.data.filter((r) => r.job === "predict" && r.status === "missed").length;
   const latest = new Map<Coin, Prediction>();
   for (const r of rows) if (!latest.has(r.coin)) latest.set(r.coin, r);
@@ -140,7 +140,7 @@ export default async function Home() {
         )}
       </section>
       <div className="pt-12">
-        <TrustPanel rows={rows} runs={runs.data.filter((r) => Date.parse(r.logged_at) > Date.now() - 30 * 86400e3)} mode={MODE} error={error} />
+        <TrustPanel rows={rows} runs={runs.data.filter((r) => Date.parse(r.logged_at) > Date.now() - 30 * 86400e3)} mode={MODE} error={error} chain={{ ...chainRes.data, error: chainRes.error }} />
       </div>
     </>
   );

@@ -7,6 +7,7 @@
 import { mockData } from "./mock";
 import { liveOnly } from "./provenance";
 import type { Candle, ModelRun, Prediction, RunLog } from "./types";
+import type { Commitment, WitnessReceipt } from "./commit";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -75,4 +76,14 @@ export async function getCandles(days = 90): Promise<Result<Candle[]>> {
 export async function getModelRuns(): Promise<Result<ModelRun[]>> {
   const r = await wrap(() => rest<ModelRun[]>(`model_runs?select=model_version,trained_at,details&order=trained_at.desc&limit=20`, 600), () => []);
   return r.error ? { ...r, data: [] } : r;
+}
+
+/** Hash chain + witness log (trust v2). Missing tables (migration not applied) -> error, shown as "not configured". */
+export async function getChain(): Promise<Result<{ commitments: Commitment[]; witness: WitnessReceipt[] }>> {
+  const empty = { commitments: [], witness: [] };
+  const r = await wrap(async () => ({
+    commitments: await rest<Commitment[]>(`commitments?select=*&order=seq.asc&limit=100000`),
+    witness: await rest<WitnessReceipt[]>(`witness_receipts?select=*&order=id.asc&limit=100000`),
+  }), () => empty);
+  return r.error ? { ...r, data: empty } : r;
 }
