@@ -97,11 +97,11 @@ a {
   }
   60% {
     transform: rotate(var(--rot)) scale(0.96);
-    opacity: 0.85;
+    opacity: 0.95;
   }
   100% {
     transform: rotate(var(--rot)) scale(1);
-    opacity: 0.85;
+    opacity: 0.95;
   }
 }
 .stamp-in {

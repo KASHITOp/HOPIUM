@@ -10,7 +10,7 @@ export const contentType = "image/png";
 export const alt = "HOPIUM receipt";
 
 const STAMP: Record<string, [string, string]> = {
-  HIT: ["CALLED IT", "#6FA27E"], MISS: ["REKT", "#D4614C"], FLAT: ["DEAD MONEY", "#6E695F"], SAT_OUT: ["SAT OUT", "#6E695F"],
+  HIT: ["CALLED IT", "#6FA27E"], MISS: ["REKT", "#D4614C"], FLAT: ["DEAD MONEY", "#898377"], SAT_OUT: ["SAT OUT", "#898377"],
 };
 
 export default async function Image({ params }: { params: { id: string } }) {
@@ -40,7 +40,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                 {p.move !== null && <span style={{ color: "#D6CEBD" }}>exit ${price(p.price_at_target!)} . move {signedPct(p.move)}</span>}
               </div>
             )}
-            <div style={{ display: "flex", position: "absolute", right: 36, top: 120, transform: "rotate(-7deg)", border: `5px solid ${stamp[1]}`, color: stamp[1], fontSize: 40, padding: "4px 18px", opacity: 0.85 }}>
+            <div style={{ display: "flex", alignSelf: "flex-end", marginTop: 22, transform: "rotate(-6deg)", border: `5px solid ${stamp[1]}`, color: stamp[1], fontSize: 44, padding: "4px 18px", opacity: 0.95 }}>
               {stamp[0]}
             </div>
             <div style={{ fontSize: 15, color: "#8F897C", marginTop: 28 }}>Not financial advice. Predictions are probabilistic and often wrong.</div>

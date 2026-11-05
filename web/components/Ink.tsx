@@ -22,7 +22,7 @@ export function InkDefs() {
         </clipPath>
         <filter id="uneven-ink" x="-10%" y="-10%" width="120%" height="120%">
           <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" result="noise" />
-          <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 1.55" result="holes" />
+          <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.85" result="holes" />
           <feComposite in="SourceGraphic" in2="holes" operator="in" result="inked" />
           <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="1" seed="9" result="warp" />
           <feDisplacementMap in="inked" in2="warp" scale="1.6" xChannelSelector="R" yChannelSelector="G" />

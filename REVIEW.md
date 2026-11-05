@@ -266,3 +266,4 @@ $job$);
 3. Check after the next hour: `select status, return_message, start_time from cron.job_run_details order by start_time desc limit 3;`
    and `select status_code, created from net._http_response order by created desc limit 3;` (expect 204).
    Remove with `select cron.unschedule('hopium-hourly-dispatch');`. Duplicate dispatches are harmless (DB idempotency).
+| 2026-11-05 | Stamps legible: opacity 0.85 -> 0.95, sizes +10%, lighter ink texture, grey stamps #6E695F -> #898377 (4.5:1 on slip), stamp moved to its own row beside the barcode so it never overlaps text; share image stamp in flow, 0.95 opacity | Owner: DEAD MONEY on /r/14 too faint |

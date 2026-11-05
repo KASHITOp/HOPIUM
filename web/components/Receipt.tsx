@@ -67,11 +67,12 @@ export function Receipt({ p, printing = false, compact = false }: { p: Predictio
           )}
         </div>
         <div className={`mt-2 text-[10px] uppercase tracking-[0.1em] ${prov === "demo" ? "text-red" : "text-faded"}`}>{PROVENANCE_LABEL[prov]}</div>
-        <div className="mt-4">
+        {/* barcode and stamp share their own row: the stamp sits on empty paper, never over text */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <Barcode id={p.id} height={compact ? 24 : 32} />
-        </div>
-        <div className="pointer-events-none absolute bottom-6 right-3">
-          <Stamp kind={stampFor(p.outcome)} seed={p.id} size={compact ? "md" : "lg"} animate={graded && printing} />
+          <div className="pointer-events-none px-1 py-2">
+            <Stamp kind={stampFor(p.outcome)} seed={p.id} size={compact ? "md" : "lg"} animate={graded && printing} />
+          </div>
         </div>
         {!compact && <p className="mt-3 text-[10px] leading-4 text-faded">{DISCLAIMER}</p>}
       </div>
