@@ -90,3 +90,13 @@ skipped late (rule late-v1), `error` or `ok` without that coin's row -> failed; 
 settled expected slots, independent of accuracy. Consecutive missing hours with the same state merge into intervals.
 Retries cannot duplicate slots (DB unique key on coin/horizon/close; the ledger keys by slot). The 2026-11-04/05
 scheduler outage (REVIEW.md incident) appears as `no_job` and `late_skipped` intervals. Nothing is backfilled.
+
+## WS8 Model and rule registry: implemented, tested (`ml/models/registry.json`, `ml/hopium/registry.py`, `/models`)
+
+Each entry: version, artifact sha256 (checked against the file before registering), code commit, feature schema,
+training period and cutoff, decision rule, grading rule, change kind (initial / automatic retrain under an unchanged
+procedure / procedure change), reason, research artifacts. `activated_at` is filled once from the first live row's
+database insert time. The DB table rejects edits and deletes except filling activation/retirement once (PGlite tests).
+The weekly retrain appends a new entry (code commit = the workflow's `GITHUB_SHA`) and classifies it by comparing
+feature groups and the decision-rule form with the previous entry. Each receipt links to `/models#<version>`;
+per-version live records are never pooled. Versions seen in predictions without an entry are shown as unregistered.

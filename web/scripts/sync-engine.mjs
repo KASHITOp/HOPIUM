@@ -20,3 +20,4 @@ const out = {
 };
 fs.writeFileSync(new URL("../lib/engine.json", import.meta.url), JSON.stringify(out, null, 1));
 console.log("lib/engine.json", out.version, out.label_code, "configs tried:", out.configs_tried);
+fs.copyFileSync(new URL("../../ml/models/registry.json", import.meta.url), new URL("../lib/registry.json", import.meta.url));

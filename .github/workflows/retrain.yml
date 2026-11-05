@@ -24,12 +24,12 @@ jobs:
       - name: Refresh data, walk-forward check (leakage gate), rebuild live bundle
         run: python -m research.weekly
       - name: Publish model row
-        run: python -m hopium.publish_model
+        run: python -m hopium.publish_model && python -m hopium.registry --append-current
       - name: Commit model artifacts
         working-directory: .
         run: |
           git config user.name "hopium-bot"
           git config user.email "hopium-bot@users.noreply.github.com"
-          git add ml/models/engine_v3.pkl ml/models/engine_v3.json ml/EXPERIMENTS.md ml/research/results.jsonl
+          git add ml/models/engine_v3.pkl ml/models/engine_v3.json ml/models/registry.json ml/EXPERIMENTS.md ml/research/results.jsonl
           git commit -m "Weekly retrain $(date -u +%F)" || exit 0
           for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done

@@ -57,7 +57,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
           </p>
         )}
         <p className="mt-3 text-faded">
-          Model {p.model_version}. Score {p.score?.toFixed(4) ?? "n/a"} against a threshold of {p.threshold ?? "n/a"}. Database
+          Model <Link className="ink-link" href={`/models#${p.model_version}`}>{p.model_version}</Link> (artifact, code commit and rules in the registry). Score {p.score?.toFixed(4) ?? "n/a"} against a threshold of {p.threshold ?? "n/a"}. Database
           triggers reject edits, re-grading and deletes; someone with owner access to the database could still change them.
         </p>
         <h2 className="display mt-8 text-[26px] text-ink">Timeline</h2>

@@ -46,7 +46,7 @@ jobs:
       - name: Publish model row (idempotent)
         if: always()
         working-directory: ml
-        run: python -m hopium.publish_model
+        run: python -m hopium.publish_model && python -m hopium.registry
       - name: Commit ops output
         if: always()
         run: |

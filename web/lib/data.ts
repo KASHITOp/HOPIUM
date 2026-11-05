@@ -8,6 +8,7 @@ import { mockData } from "./mock";
 import { liveOnly } from "./provenance";
 import type { Candle, ModelRun, Prediction, RunLog } from "./types";
 import type { Commitment, WitnessReceipt } from "./commit";
+import { STATIC_REGISTRY, type ModelEntry } from "./registry";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -86,4 +87,10 @@ export async function getChain(): Promise<Result<{ commitments: Commitment[]; wi
     witness: await rest<WitnessReceipt[]>(`witness_receipts?select=*&order=id.asc&limit=100000`),
   }), () => empty);
   return r.error ? { ...r, data: empty } : r;
+}
+
+export async function getRegistry(): Promise<Result<ModelEntry[]>> {
+  const r = await wrap(() => rest<ModelEntry[]>(`model_registry?select=*&order=registered_at.asc`, 600), () => STATIC_REGISTRY);
+  // DB not migrated / empty: show the committed registry, labelled as such by the caller
+  return r.error || !r.data.length ? { ...r, data: STATIC_REGISTRY } : r;
 }
