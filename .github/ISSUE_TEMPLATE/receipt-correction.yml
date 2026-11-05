@@ -1,0 +1,25 @@
+name: Challenge a receipt
+description: Report a wrong price, grade, timestamp or hash on a specific HOPIUM receipt.
+title: "Receipt #<id>: <what is wrong>"
+labels: [receipt-challenge]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Originals are never edited. If the challenge holds, a linked correction record is added and shown on the receipt;
+        published metrics keep the original grade and list the correction beside it. Please run
+        `python3 tools/verify_receipt.py https://<site>/r/<id>/evidence` first and paste its output.
+  - type: input
+    id: receipt
+    attributes: { label: Receipt id, placeholder: "14" }
+    validations: { required: true }
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong
+      options: [entry or exit price, outcome / grade, fee or net return, timestamp, hash or chain, other]
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: Evidence, description: "Verifier output, Binance candle URL, or your calculation." }
+    validations: { required: true }

@@ -79,7 +79,7 @@ export function TrustPanel({ rows, runs, mode, error, chain, allRuns }: { rows: 
         <Row k="timestamps" v="insert and grading times come from the database clock; generation times are the job's own report. None are independently witnessed." />
         <Row k="hash chain" v={cs.chain} warn={cs.warn && !chain?.commitments.length} />
         <Row k="independent witnessing" v={cs.witness} warn={cs.warn} />
-        <Row k="verification" v="each receipt shows its inputs and arithmetic; CSV has every row. A standalone verifier is planned, not built." />
+        <Row k="verification" v={<>each receipt has a Verify section, a downloadable evidence bundle and a standalone verifier (tools/verify_receipt.py, no credentials). Challenges go through GitHub issues; corrections are new linked records.</>} />
         <Row k="known limitations" v="edge faded in 2026 (most hours NO CALL); late cron runs are skipped; fills, slippage and funding are not modelled in the backtest." />
       </dl>
     </section>

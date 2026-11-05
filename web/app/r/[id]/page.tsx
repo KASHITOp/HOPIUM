@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { LocalTime } from "@/components/LocalTime";
 import { Receipt } from "@/components/Receipt";
-import { getChain, getPrediction } from "@/lib/data";
+import { getChain, getCorrections, getPrediction } from "@/lib/data";
 import { canonical, sha256, verifyChain, witnessFor } from "@/lib/commit";
 import { signedPct } from "@/lib/format";
 import { latency, orderingIssues, stages } from "@/lib/lifecycle";
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function ReceiptPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   if (!Number.isInteger(id) || id <= 0) notFound();
-  const [{ data: p, error }, chainRes] = await Promise.all([getPrediction(id), getChain()]);
+  const [{ data: p, error }, chainRes, corr] = await Promise.all([getPrediction(id), getChain(), getCorrections(id)]);
   if (error) return <p role="alert" className="py-16 text-red">Database unreachable ({error}). This receipt exists or not; we cannot check right now.</p>;
   if (!p) notFound();
   const gap = (Date.parse(p.inserted_at) - Date.parse(p.candle_close_time)) / 60e3;
@@ -81,6 +81,13 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
         <p className="mt-2 text-[12px] text-faded">Rules: {RULES.grading}; {RULES.flat_rule}; {RULES.target_rule}; fees {RULES.fee_rule}.</p>
         <h2 className="display mt-8 text-[26px] text-ink">Tamper evidence</h2>
         <TamperEvidence p={p} chain={chainRes.data} chainError={chainRes.error} />
+        <h2 className="display mt-8 text-[26px] text-ink">Verify this receipt</h2>
+        <div className="text-[12px] leading-6">
+          <p><a className="ink-link" href={`/r/${p.id}/evidence`}>Download the evidence bundle</a> (JSON: row, canonical payload, chain up to here, witness, model entry, Binance price URLs, outcome and fee arithmetic).</p>
+          <p>Check it yourself, no account or key needed: <code className="text-ink">python3 tools/verify_receipt.py https://&lt;this site&gt;/r/{p.id}/evidence</code> (<a className="ink-link" href="https://github.com/KASHITOp/HOPIUM/blob/main/tools/verify_receipt.py">script</a>). It re-fetches the Binance candles and recomputes the hash, the chain, the verdict and the fee. Arithmetic passing does not prove publication time; only a witness does.</p>
+          <p>Corrections: {corr.data.length ? corr.data.map((c) => <span key={c.id} className="text-red"> [{c.status}{c.corrected_outcome ? `: ${c.corrected_outcome}` : ""}] {c.summary} (<a className="ink-link" href={c.issue_url}>issue</a>).</span>) : "none."}
+            {" "}The original above is never edited; metrics use original grades. <a className="ink-link" href={`https://github.com/KASHITOp/HOPIUM/issues/new?template=receipt-correction.yml&title=${encodeURIComponent(`Receipt #${p.id}: `)}`}>Challenge this receipt</a> (GitHub issue).</p>
+        </div>
         <p className="mt-6"><Link className="ink-link" href="/receipts">All receipts</Link></p>
       </div>
     </div>

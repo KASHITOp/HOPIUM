@@ -100,3 +100,16 @@ database insert time. The DB table rejects edits and deletes except filling acti
 The weekly retrain appends a new entry (code commit = the workflow's `GITHUB_SHA`) and classifies it by comparing
 feature groups and the decision-rule form with the previous entry. Each receipt links to `/models#<version>`;
 per-version live records are never pooled. Versions seen in predictions without an entry are shown as unregistered.
+
+## WS11 Verify this receipt: implemented, tested
+
+`/r/<id>` has a Verify section; `/r/<id>/evidence` serves a JSON bundle (`hopium-evidence-v1`): the row, re-derived
+canonical payload and hash, the commitment and the chain prefix up to it, witness coverage, the registry entry,
+Binance kline URLs for entry and exit, stored and recomputed outcome and net after 0.2% fees, corrections, and what the
+bundle does and does not prove. `tools/verify_receipt.py` (stdlib only, no credentials) checks payload, chain, prices
+(re-fetched from data-api.binance.vision), outcome and witness coverage separately; arithmetic passing never counts as
+timing proof. Tests: `ml/tests/test_verifier.py` (standalone canonicaliser equals the pipeline's, edits and wrong grades
+fail, a small correct move is FLAT with negative net). Challenges: GitHub issue template
+`.github/ISSUE_TEMPLATE/receipt-correction.yml` (no public form, so no new spam surface). Resolutions are rows in the
+append-only `corrections` table (written by the owner with the service key); originals are never edited and metrics
+keep original grades, with corrections listed beside them.

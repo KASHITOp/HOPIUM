@@ -94,3 +94,10 @@ export async function getRegistry(): Promise<Result<ModelEntry[]>> {
   // DB not migrated / empty: show the committed registry, labelled as such by the caller
   return r.error || !r.data.length ? { ...r, data: STATIC_REGISTRY } : r;
 }
+
+export interface Correction { id: number; prediction_id: number; issue_url: string; status: "open" | "rejected" | "corrected"; summary: string; corrected_outcome: string | null; logged_at: string }
+export async function getCorrections(predictionId?: number): Promise<Result<Correction[]>> {
+  const f = predictionId ? `&prediction_id=eq.${predictionId}` : "";
+  const r = await wrap(() => rest<Correction[]>(`corrections?select=*${f}&order=id.asc`), () => []);
+  return r.error ? { ...r, data: [] } : r;
+}
