@@ -71,5 +71,47 @@ await t("trust: input cutoff after candle close rejected", [ins4({ coin: "SOL", 
 await t("trust: generated before job start rejected", [ins4({ coin: "SOL", start: base + 40 * H + 10 * 60e3, gen: base + 40 * H + 60e3 })], false);
 await t("trust: provenance edit rejected", [`update predictions set provenance=null where candle_close_time='${iso(base + 40 * H)}' and coin='BTC'`], false);
 await t("trust: generated_at edit rejected", [`update predictions set generated_at=candle_close_time where candle_close_time='${iso(base + 40 * H)}' and coin='BTC'`], false);
+
+// ---------------- trust v2: hash chain, witness log, registry, corrections
+import { createHash } from "crypto";
+const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
+const Z = "0".repeat(64);
+const preds = (await db.query(`select id, coin, signal, model_version, horizon from predictions order by id limit 3`)).rows;
+const canon = (p, extra = {}) => JSON.stringify({ coin: p.coin, horizon: p.horizon, id: String(p.id), model_version: p.model_version, signal: p.signal, ...extra });
+const cIns = (p, text = canon(p), hash = sha(text)) =>
+  `insert into commitments (prediction_id, scheme, canonical, payload_hash, prev_hash, chain_hash) values (${p.id}, 'hopium-pred-v1', '${text}', '${hash}', '${Z}', '${Z}')`;
+await t("chain: first commitment accepted", [cIns(preds[0])], true);
+await t("chain: wrong payload_hash rejected", [cIns(preds[1], canon(preds[1]), sha("x"))], false);
+await t("chain: canonical for another coin rejected", [cIns(preds[1], canon({ ...preds[1], coin: "XRP" }))], false);
+await t("chain: second commitment accepted", [cIns(preds[1])], true);
+await t("chain: duplicate prediction rejected", [cIns(preds[1])], false);
+{
+  const r = (await db.query(`select * from commitments order by seq`)).rows;
+  const good = r.length === 2 && r[0].seq == 1 && r[1].seq == 2 && r[0].prev_hash === Z
+    && r[0].chain_hash === sha(Z + r[0].payload_hash) && r[1].prev_hash === r[0].chain_hash
+    && r[1].chain_hash === sha(r[0].chain_hash + r[1].payload_hash);
+  await t("chain: DB assigns seq and links match sha256(prev+payload)", [good ? "select 1" : "select 1/0"], true);
+}
+await t("chain: client-chosen prev_hash ignored (DB recomputes)", [cIns(preds[2]), `select 1/(select count(*)::int from commitments where seq=3 and prev_hash <> '${Z}')`], true);
+await t("chain: update rejected", [`update commitments set canonical='{}' where seq=1`], false);
+await t("chain: delete rejected", [`delete from commitments where seq=1`], false);
+await t("chain: truncate rejected", [`truncate commitments`], false);
+await t("chain: anon insert rejected", [`set role anon`, `insert into commitments (prediction_id, scheme, canonical, payload_hash, prev_hash, chain_hash) values (1,'hopium-pred-v1','{}','${Z}','${Z}','${Z}')`], false);
+await db.query(`reset role`);
+await t("chain: anon can read", [`set role anon`, `select * from commitments`], true);
+await db.query(`reset role`);
+const head = (await db.query(`select chain_hash from commitments where seq=3`)).rows[0].chain_hash;
+await t("witness: matching chain_hash accepted", [`insert into witness_receipts (chain_seq, chain_hash, service, status) values (3, '${head}', 'opentimestamps', 'submitted')`], true);
+await t("witness: wrong chain_hash rejected", [`insert into witness_receipts (chain_seq, chain_hash, service, status) values (2, '${head}', 'opentimestamps', 'submitted')`], false);
+await t("witness: failure row accepted (visible)", [`insert into witness_receipts (chain_seq, chain_hash, service, status, detail) values (3, '${head}', 'opentimestamps', 'failed', 'timeout')`], true);
+await t("witness: edit rejected", [`update witness_receipts set status='submitted' where status='failed'`], false);
+await t("registry: insert accepted", [`insert into model_registry (model_version, decision_rule, grading_rule, change_kind, change_reason) values ('v3', 'dec-v3', 'grade-v1', 'initial', 'first')`], true);
+await t("registry: first activation allowed", [`update model_registry set activated_at=now() where model_version='v3'`], true);
+await t("registry: activation rewrite rejected", [`update model_registry set activated_at=now()-interval '1 day' where model_version='v3'`], false);
+await t("registry: rule edit rejected", [`update model_registry set decision_rule='x' where model_version='v3'`], false);
+await t("registry: delete rejected", [`delete from model_registry where model_version='v3'`], false);
+await t("corrections: linked record accepted", [`insert into corrections (prediction_id, issue_url, status, summary) values (${preds[0].id}, 'https://github.com/KASHITOp/HOPIUM/issues/1', 'open', 'test')`], true);
+await t("corrections: non-GitHub link rejected", [`insert into corrections (prediction_id, issue_url, status, summary) values (${preds[0].id}, 'http://evil', 'open', 'x')`], false);
+await t("corrections: edit rejected (resolution is a new row)", [`update corrections set status='corrected'`], false);
 console.log(`\n${ok} passed, ${bad} failed`);
 if (bad) process.exit(1);

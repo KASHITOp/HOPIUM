@@ -27,6 +27,14 @@ jobs:
         id: predict
         working-directory: ml
         run: python -m hopium.predict
+      - name: Commit new predictions to the hash chain
+        if: always()
+        working-directory: ml
+        run: python -m hopium.commit
+      - name: Witness chain head (OpenTimestamps)
+        if: always()
+        working-directory: ml
+        run: pip install -q opentimestamps-client && python -m hopium.witness || echo "witness failed (logged, retried next hour)"
       - name: Grade matured predictions
         if: always()
         working-directory: ml
@@ -44,7 +52,7 @@ jobs:
         run: |
           git config user.name "hopium-bot"
           git config user.email "hopium-bot@users.noreply.github.com"
-          git add ml/ops/last_predict.json ml/ops/last_grade.json 2>/dev/null || true
+          git add ml/ops/last_predict.json ml/ops/last_grade.json ml/ops/witness 2>/dev/null || true
           git commit -m "ops: hourly $(date -u +%FT%H:%MZ)" || exit 0
           for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done
       - name: Watchdog, re-arm the heartbeat chain
