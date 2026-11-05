@@ -1,0 +1,1 @@
+hopium-chain-v1 seq=24 chain_hash=6474b2db0d2ae410f5ebe34f63d65c5c7b1fe32a752bd9b5bdd32df23c9a1f5b
