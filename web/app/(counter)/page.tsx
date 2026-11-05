@@ -15,7 +15,7 @@ import { DISCLAIMER, historicConfident, lastDays, lean, tally } from "@/lib/summ
 import type { Coin, Prediction } from "@/lib/types";
 import { pctFloor } from "@/lib/stats";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 
 const COINS: Coin[] = ["BTC", "ETH", "SOL"];
 

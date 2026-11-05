@@ -10,7 +10,7 @@ import { latency, orderingIssues, stages } from "@/lib/lifecycle";
 import { rowOutcome, RULES } from "@/lib/outcomes";
 import { PROVENANCE_LABEL, provenanceOf } from "@/lib/provenance";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { data: p } = await getPrediction(Number(params.id));

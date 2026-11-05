@@ -7,7 +7,7 @@ import engine from "@/lib/engine.json";
 import { signedPct } from "@/lib/format";
 import { WalkForwardMethod } from "@/components/Trust";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 export const metadata: Metadata = { title: "How it works", description: "Data, features, validation, the honest result, and what HOPIUM cannot do." };
 
 const wf = engine.walk_forward;

@@ -9,7 +9,7 @@ on:
     branches: [main]
     paths: [ml/ops/run-now]
 concurrency: { group: hourly, cancel-in-progress: false }
-permissions: { contents: write }
+permissions: { contents: write, actions: write }
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -47,3 +47,7 @@ jobs:
           git add ml/ops/last_predict.json ml/ops/last_grade.json 2>/dev/null || true
           git commit -m "ops: hourly $(date -u +%FT%H:%MZ)" || exit 0
           for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done
+      - name: Watchdog, re-arm the heartbeat chain
+        if: always()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh workflow run heartbeat.yml -R "${{ github.repository }}" --ref main || echo "heartbeat re-arm failed (non-fatal)"

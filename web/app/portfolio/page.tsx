@@ -11,7 +11,7 @@ import { signedPct } from "@/lib/format";
 import { holdBtc, simulate } from "@/lib/portfolio";
 import { DISCLAIMER } from "@/lib/summary";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 export const metadata: Metadata = { title: "Paper portfolio", description: "What $1,000 following every HOPIUM call since launch would be worth, after fees. Simulated." };
 
 function Stat({ k, v }: { k: string; v: string }) {

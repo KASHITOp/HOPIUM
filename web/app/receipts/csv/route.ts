@@ -1,7 +1,7 @@
 import { getPredictions } from "@/lib/data";
 import { applyFilters, parseFilters, toCsv } from "@/lib/filters";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 
 export async function GET(req: Request) {
   const sp = Object.fromEntries(new URL(req.url).searchParams.entries());

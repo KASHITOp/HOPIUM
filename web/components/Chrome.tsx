@@ -60,8 +60,8 @@ export function Footer() {
           </div>
           <p className="mt-2 max-w-md text-ink">{DISCLAIMER}</p>
           <p className="mt-2 max-w-md text-faded">
-            No trade execution, no paid tips, no sign-up, no exchange links. Every call is stored before its outcome exists and
-            the database refuses edits.
+            No trade execution, no paid tips, no sign-up, no exchange links. Every call is stored before its outcome exists;
+            database triggers reject edits and deletes, though the database owner could still change rows.
           </p>
         </div>
         <ul className="space-y-1">

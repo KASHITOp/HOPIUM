@@ -1,6 +1,6 @@
 import { getCandles } from "@/lib/data";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 
 export async function GET(req: Request) {
   const coin = new URL(req.url).searchParams.get("coin") ?? "BTC";

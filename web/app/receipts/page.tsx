@@ -17,7 +17,7 @@ import { MODE } from "@/lib/data";
 import { calibrationBins, luckSentence, pctCeil, pctFloor } from "@/lib/stats";
 import { hitStreaks, lean, rollingHitRate, tally, wallOfShame } from "@/lib/summary";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
 export const metadata: Metadata = { title: "Receipts", description: "Every HOPIUM prediction, graded in public, with the statistics to judge it." };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -58,8 +58,9 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
         <div>
           <h1 className="display text-[56px] text-ink sm:text-[80px]">The receipts.</h1>
           <p className="mt-3 max-w-2xl text-[14px] leading-6">
-            Every prediction since launch. Rows are inserted before the outcome exists and the database refuses edits and
-            deletes, so the embarrassing ones stay. Hit rate counts only graded UP and DOWN calls; FLAT moves (under 0.1%),
+            Every prediction since launch. Rows are inserted before the outcome exists and database triggers reject edits and
+            deletes, so the embarrassing ones stay (the database owner could still change them; the triggers stop the app,
+            not the owner). Hit rate counts only graded UP and DOWN calls; FLAT moves (under 0.1%),
             NO CALL hours and pending calls are counted separately and never mixed in.
           </p>
         </div>

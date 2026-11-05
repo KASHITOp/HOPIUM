@@ -1,15 +1,18 @@
 name: heartbeat
-# Fallback scheduler. GitHub's `schedule` trigger for hourly.yml did not fire at all on 2026-11-04 (0 schedule events
-# in 4+ hours on a public repo with the workflow on the default branch). This job sleeps until the next HH:02 UTC,
-# dispatches hourly.yml, then dispatches itself again. workflow_dispatch is one of the two events GITHUB_TOKEN may
-# trigger. Guards: only one heartbeat chain at a time, and the chain retires itself as soon as GitHub's own
-# schedule events are seen working. The DB makes any overlap harmless (duplicate inserts are ignored).
+# Self-healing hourly scheduler (GitHub's own `schedule` fired 3 times in 20 h on 2026-11-04/05, always late).
+# Each run sleeps until the next HH:02 UTC, dispatches hourly.yml, and ALWAYS dispatches the next heartbeat, even if
+# an earlier step failed or the run was cancelled. The concurrency group keeps at most one running + one pending
+# heartbeat, so extra dispatches (from hourly.yml, the cron watchdog below, or a manual kick) collapse instead of
+# multiplying. The DB rejects duplicate and late inserts, so overlap is harmless; missed hours stay missed.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17,47 * * * *"   # watchdog: re-arms the chain if GitHub ever fires it
   push:
     branches: [main]
     paths: [ml/ops/heartbeat-start]
 permissions: { actions: write, contents: read }
+concurrency: { group: heartbeat, cancel-in-progress: false }
 jobs:
   beat:
     runs-on: ubuntu-latest
@@ -18,33 +21,18 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
     steps:
-      - name: Only one chain at a time
-        id: guard
-        run: |
-          sleep 45   # let the run that dispatched us finish first
-          others=$(gh run list -R "$REPO" --workflow heartbeat.yml --json databaseId,status \
-            --jq "[.[] | select((.status==\"in_progress\" or .status==\"queued\") and .databaseId != ${{ github.run_id }})] | length")
-          echo "other heartbeat runs active: $others"
-          if [ "$others" != "0" ]; then echo "stop=1" >> "$GITHUB_OUTPUT"; fi
-      - name: Retire if GitHub's own schedule works again
-        id: health
-        if: steps.guard.outputs.stop != '1'
-        run: |
-          since=$(date -u -d '3 hours ago' +%FT%TZ)
-          n=$(gh run list -R "$REPO" --workflow hourly.yml --event schedule --json createdAt --jq "[.[] | select(.createdAt > \"$since\")] | length")
-          echo "schedule-triggered hourly runs in the last 3h: $n"
-          if [ "$n" != "0" ]; then echo "stop=1" >> "$GITHUB_OUTPUT"; fi
       - name: Sleep until the next HH:02 UTC
-        if: steps.guard.outputs.stop != '1' && steps.health.outputs.stop != '1'
         run: |
-          now=$(date -u +%s); next=$(( (now / 3600 + 1) * 3600 + 120 ))
-          # if we are already inside this hour's first 2 minutes, target this hour
-          this=$(( now / 3600 * 3600 + 120 )); [ "$now" -lt "$this" ] && next=$this
+          now=$(date -u +%s); this=$(( now / 3600 * 3600 + 120 ))
+          if [ "$now" -lt "$this" ]; then next=$this; else next=$(( this + 3600 )); fi
           echo "sleeping $(( next - now ))s until $(date -u -d @$next +%T)"
           sleep $(( next - now ))
-      - name: Dispatch hourly, then the next heartbeat
-        if: steps.guard.outputs.stop != '1' && steps.health.outputs.stop != '1'
+      - name: Dispatch hourly
         run: |
-          gh workflow run hourly.yml -R "$REPO" --ref main && echo "hourly dispatched at $(date -u +%T)"
-          sleep 5
-          gh workflow run heartbeat.yml -R "$REPO" --ref main && echo "next heartbeat dispatched"
+          for i in 1 2 3 4 5; do gh workflow run hourly.yml -R "$REPO" --ref main && echo "hourly dispatched $(date -u +%T)" && exit 0; sleep $((i*10)); done
+          exit 1
+      - name: Always queue the next heartbeat
+        if: always()
+        run: |
+          for i in 1 2 3 4 5; do gh workflow run heartbeat.yml -R "$REPO" --ref main && echo "next heartbeat queued" && exit 0; sleep $((i*10)); done
+          exit 1

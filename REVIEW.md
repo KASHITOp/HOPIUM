@@ -222,3 +222,47 @@ CLS went from 0.182 to 0 on Home and Receipts once the reserved-height price str
    pre-registered rule.
 3. Move the scheduler off GitHub entirely (Supabase pg_cron calling a workflow_dispatch webhook) once a scoped token
    can be stored as a Supabase secret.
+
+## Incident: site looked stalled (diagnosed 2026-11-05 13:20 UTC)
+
+- **Heartbeat chain died at 16:02 UTC on 11-04.** Run #3 (15:02) lingered until 16:22 after dispatching run #4; run #4's
+  "only one chain" guard saw #3 still in progress and stopped, ending the chain. Fix: guard removed; concurrency group
+  `heartbeat` (max one running + one pending, extras collapse); next heartbeat queued in an `if: always()` step with
+  retries; every hourly run re-arms the heartbeat; a `17,47 * * * *` cron on heartbeat acts as a watchdog. The
+  "retire when schedule works" rule is gone: GitHub's schedule fired only 3 times in 20 h (17:49, 23:23, 05:44), all late.
+- **Hours covered:** predict ok at 11:00, 14:00, 15:00, 16:00; logged missed at 10:00, 17:00, 23:00, 05:00 (started 22 to
+  50 min late). Hours with no job at all (e.g. 12:00, 13:00, 18:00 to 22:00) have no run_log row; they were never
+  backfilled. Ids 4 to 6 do not exist (sequence values consumed by inserts that failed before trust v1 was applied).
+- **Stale pages:** production had not been redeployed since 11-04 (Vercel free-tier 402); live pages are now
+  `force-dynamic` and DB fetches cache at most 60 s, so the site cannot show a build-time snapshot again.
+- **Grading verified:** rows 1-3 graded at 23:23, rows 7-15 at 05:45. All 12 rows re-checked against Binance 1h closes
+  (data-api.binance.vision): entry, exit, move and outcome match exactly (12/12). Row 14 (ETH UP, 16:00) moved -0.065%
+  and is correctly FLAT; the rest are NO_CALL, so SAT_OUT.
+- Footer and receipts copy no longer say "the database refuses edits"; they say triggers reject edits and the database
+  owner could still change rows.
+
+## WAITING ON KARTAVYAA (optional, recommended): external hourly trigger via Supabase pg_cron
+
+GitHub-only chaining is now self-healing, but it still runs on GitHub's infrastructure. An independent trigger:
+
+1. GitHub > Settings > Developer settings > Fine-grained tokens > Generate: repository access **only KASHITOp/HOPIUM**,
+   permission **Actions: Read and write**, nothing else. Do not paste it into chat.
+2. Supabase SQL editor, run (paste the token where shown, inside the SQL editor only):
+
+```sql
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select vault.create_secret('PASTE_TOKEN_HERE', 'github_dispatch_token');
+select cron.schedule('hopium-hourly-dispatch', '1 * * * *', $job$
+  select net.http_post(
+    url := 'https://api.github.com/repos/KASHITOp/HOPIUM/actions/workflows/hourly.yml/dispatches',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'github_dispatch_token'),
+      'Accept', 'application/vnd.github+json', 'X-GitHub-Api-Version', '2022-11-28', 'User-Agent', 'hopium-pgcron'),
+    body := '{"ref":"main"}'::jsonb);
+$job$);
+```
+
+3. Check after the next hour: `select status, return_message, start_time from cron.job_run_details order by start_time desc limit 3;`
+   and `select status_code, created from net._http_response order by created desc limit 3;` (expect 204).
+   Remove with `select cron.unschedule('hopium-hourly-dispatch');`. Duplicate dispatches are harmless (DB idempotency).

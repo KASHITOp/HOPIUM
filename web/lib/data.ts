@@ -23,7 +23,7 @@ export interface Result<T> {
 
 async function rest<T>(path: string, revalidate = 60): Promise<T> {
   if (!URL || !KEY) throw new Error("Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)");
-  const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY }, next: { revalidate } });
+  const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY }, next: { revalidate: Math.min(revalidate, 60) } });
   if (!res.ok) throw new Error(`database said ${res.status}`);
   return (await res.json()) as T;
 }
