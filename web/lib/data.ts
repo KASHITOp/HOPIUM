@@ -7,6 +7,8 @@
 import { mockData } from "./mock";
 import { liveOnly } from "./provenance";
 import type { Candle, ModelRun, Prediction, RunLog } from "./types";
+import type { Commitment, WitnessReceipt } from "./commit";
+import { STATIC_REGISTRY, type ModelEntry } from "./registry";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -74,5 +76,28 @@ export async function getCandles(days = 90): Promise<Result<Candle[]>> {
 
 export async function getModelRuns(): Promise<Result<ModelRun[]>> {
   const r = await wrap(() => rest<ModelRun[]>(`model_runs?select=model_version,trained_at,details&order=trained_at.desc&limit=20`, 600), () => []);
+  return r.error ? { ...r, data: [] } : r;
+}
+
+/** Hash chain + witness log (trust v2). Missing tables (migration not applied) -> error, shown as "not configured". */
+export async function getChain(): Promise<Result<{ commitments: Commitment[]; witness: WitnessReceipt[] }>> {
+  const empty = { commitments: [], witness: [] };
+  const r = await wrap(async () => ({
+    commitments: await rest<Commitment[]>(`commitments?select=*&order=seq.asc&limit=100000`),
+    witness: await rest<WitnessReceipt[]>(`witness_receipts?select=*&order=id.asc&limit=100000`),
+  }), () => empty);
+  return r.error ? { ...r, data: empty } : r;
+}
+
+export async function getRegistry(): Promise<Result<ModelEntry[]>> {
+  const r = await wrap(() => rest<ModelEntry[]>(`model_registry?select=*&order=registered_at.asc`, 600), () => STATIC_REGISTRY);
+  // DB not migrated / empty: show the committed registry, labelled as such by the caller
+  return r.error || !r.data.length ? { ...r, data: STATIC_REGISTRY } : r;
+}
+
+export interface Correction { id: number; prediction_id: number; issue_url: string; status: "open" | "rejected" | "corrected"; summary: string; corrected_outcome: string | null; logged_at: string }
+export async function getCorrections(predictionId?: number): Promise<Result<Correction[]>> {
+  const f = predictionId ? `&prediction_id=eq.${predictionId}` : "";
+  const r = await wrap(() => rest<Correction[]>(`corrections?select=*${f}&order=id.asc`), () => []);
   return r.error ? { ...r, data: [] } : r;
 }

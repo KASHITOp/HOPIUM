@@ -1,0 +1,9 @@
+{
+ "ran_at": "2026-11-05T15:31:48Z",
+ "ots_a_pool": "200",
+ "ots_b_pool": "000000",
+ "ots_finney": "200",
+ "rekor_log": "200",
+ "ots_client_stamp_exit": 0,
+ "ots_info": "File sha256 hash: f0be7528e0de4ddcd2cf3bd25754b104d2a1afa3d7f75876fc7652b895103c2e\nTimestamp:\nappend 71c4b629d96263ff35d30d3400d285e0\nsha256\n -> append 6e29b5f3f1c26e4c876f24153def443c\n    sha256\n    append 492f0f777cb079b31d1e7fed3b4c88cf146bb264f13900b6895e5a6738800cb1\n    sha256\n    prepend 6aeca163\n    append 2477ebf83654409b\n    verify PendingAttestation('https://btc.calendar.catallaxy.com')\n -> append 92b493d790300060d92c9155be29d071\n    sha256\n    prepend f1a9146fae19296b7a0eb82255d0dc4a565712c7c5107ec7f2bbef94ebabf87e\n    sha256\n    prepend e53f21406678a5502001ff92ffa016efea35879fab3b257c26eadcf1c95f8cc3\n    sha256\n    append 812f4ff8e4be3960909c02586b1dc843a59b821d5f967d2e9f05f2217a9c3633\n    sha256\n    prepend 6aeca164\n"
+}

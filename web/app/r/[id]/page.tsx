@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import type { Prediction } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { LocalTime } from "@/components/LocalTime";
 import { Receipt } from "@/components/Receipt";
-import { getPrediction } from "@/lib/data";
+import { getChain, getCorrections, getPrediction } from "@/lib/data";
+import { canonical, sha256, verifyChain, witnessFor } from "@/lib/commit";
 import { signedPct } from "@/lib/format";
 import { latency, orderingIssues, stages } from "@/lib/lifecycle";
 import { rowOutcome, RULES } from "@/lib/outcomes";
@@ -22,7 +24,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function ReceiptPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   if (!Number.isInteger(id) || id <= 0) notFound();
-  const { data: p, error } = await getPrediction(id);
+  const [{ data: p, error }, chainRes, corr] = await Promise.all([getPrediction(id), getChain(), getCorrections(id)]);
   if (error) return <p role="alert" className="py-16 text-red">Database unreachable ({error}). This receipt exists or not; we cannot check right now.</p>;
   if (!p) notFound();
   const gap = (Date.parse(p.inserted_at) - Date.parse(p.candle_close_time)) / 60e3;
@@ -55,7 +57,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
           </p>
         )}
         <p className="mt-3 text-faded">
-          Model {p.model_version}. Score {p.score?.toFixed(4) ?? "n/a"} against a threshold of {p.threshold ?? "n/a"}. Database
+          Model <Link className="ink-link" href={`/models#${p.model_version}`}>{p.model_version}</Link> (artifact, code commit and rules in the registry). Score {p.score?.toFixed(4) ?? "n/a"} against a threshold of {p.threshold ?? "n/a"}. Database
           triggers reject edits, re-grading and deletes; someone with owner access to the database could still change them.
         </p>
         <h2 className="display mt-8 text-[26px] text-ink">Timeline</h2>
@@ -77,8 +79,38 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
           {issues.length ? <span className="text-red"> Timestamp problems: {issues.join("; ")}.</span> : " Timestamps are in order."}
         </p>
         <p className="mt-2 text-[12px] text-faded">Rules: {RULES.grading}; {RULES.flat_rule}; {RULES.target_rule}; fees {RULES.fee_rule}.</p>
+        <h2 className="display mt-8 text-[26px] text-ink">Tamper evidence</h2>
+        <TamperEvidence p={p} chain={chainRes.data} chainError={chainRes.error} />
+        <h2 className="display mt-8 text-[26px] text-ink">Verify this receipt</h2>
+        <div className="text-[12px] leading-6">
+          <p><a className="ink-link" href={`/r/${p.id}/evidence`}>Download the evidence bundle</a> (JSON: row, canonical payload, chain up to here, witness, model entry, Binance price URLs, outcome and fee arithmetic).</p>
+          <p>Check it yourself, no account or key needed: <code className="text-ink">python3 tools/verify_receipt.py https://&lt;this site&gt;/r/{p.id}/evidence</code> (<a className="ink-link" href="https://github.com/KASHITOp/HOPIUM/blob/main/tools/verify_receipt.py">script</a>). It re-fetches the Binance candles and recomputes the hash, the chain, the verdict and the fee. Arithmetic passing does not prove publication time; only a witness does.</p>
+          <p>Corrections: {corr.data.length ? corr.data.map((c) => <span key={c.id} className="text-red"> [{c.status}{c.corrected_outcome ? `: ${c.corrected_outcome}` : ""}] {c.summary} (<a className="ink-link" href={c.issue_url}>issue</a>).</span>) : "none."}
+            {" "}The original above is never edited; metrics use original grades. <a className="ink-link" href={`https://github.com/KASHITOp/HOPIUM/issues/new?template=receipt-correction.yml&title=${encodeURIComponent(`Receipt #${p.id}: `)}`}>Challenge this receipt</a> (GitHub issue).</p>
+        </div>
         <p className="mt-6"><Link className="ink-link" href="/receipts">All receipts</Link></p>
       </div>
+    </div>
+  );
+}
+
+function TamperEvidence({ p, chain, chainError }: { p: Prediction; chain: Awaited<ReturnType<typeof getChain>>["data"]; chainError: string | null }) {
+  if (chainError) return <p className="text-[12px] text-red">Hash chain not configured or unreachable ({chainError}). This receipt has no commitment to check.</p>;
+  const c = chain.commitments.find((x) => x.prediction_id === p.id);
+  if (!c) return <p className="text-[12px] text-red">Not yet committed to the hash chain (it is added within the hour after storage).</p>;
+  const recomputed = sha256(canonical(p as unknown as Record<string, unknown>));
+  const prefix = chain.commitments.filter((x) => x.seq <= c.seq);
+  const errs = verifyChain(prefix);
+  const w = witnessFor(c.seq, chain.witness);
+  const lagH = (Date.parse(c.committed_at) - Date.parse(p.inserted_at)) / 3600e3;
+  return (
+    <div className="text-[12px] leading-6">
+      <p>Chain position #{c.seq}, committed <LocalTime iso={c.committed_at} /> (database clock{lagH > 2 ? `, ${lagH.toFixed(0)} h after storage: this row predates the chain, so the chain only vouches for it from that moment` : ""}).</p>
+      <p className="break-all">payload sha256 <span className="text-ink">{c.payload_hash}</span></p>
+      <p>Recomputed on this page from the live row: <strong className={recomputed === c.payload_hash ? "text-ink" : "text-red"}>{recomputed === c.payload_hash ? "matches" : "DOES NOT MATCH"}</strong>.
+        Chain #1 to #{c.seq}: <strong className={errs.length ? "text-red" : "text-ink"}>{errs.length ? errs.join("; ") : "every link recomputes"}</strong>.</p>
+      <p>Independent witness: {w ? <>covered by OpenTimestamps stamp of chain #{w.chain_seq}, submitted <LocalTime iso={w.logged_at} /> (<a className="ink-link" href={`https://github.com/KASHITOp/HOPIUM/blob/main/${w.receipt_path}`}>proof file</a>). Proves existence no later than that stamp&apos;s Bitcoin block, not the earlier storage time.</> : <span className="text-red">not witnessed yet.</span>}</p>
+      <p className="text-faded">This page runs on the operator&apos;s server. To check without trusting it, run the standalone verifier (see How it works).</p>
     </div>
   );
 }

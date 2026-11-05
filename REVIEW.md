@@ -267,3 +267,29 @@ $job$);
    and `select status_code, created from net._http_response order by created desc limit 3;` (expect 204).
    Remove with `select cron.unschedule('hopium-hourly-dispatch');`. Duplicate dispatches are harmless (DB idempotency).
 | 2026-11-05 | Stamps legible: opacity 0.85 -> 0.95, sizes +10%, lighter ink texture, grey stamps #6E695F -> #898377 (4.5:1 on slip), stamp moved to its own row beside the barcode so it never overlaps text; share image stamp in flow, 0.95 opacity | Owner: DEAD MONEY on /r/14 too faint |
+
+## Phase 2 (trust-v2), 2026-11-05: all four priority items done
+
+| Date (UTC) | Decision | Why / evidence |
+|---|---|---|
+| 2026-11-05 | Witness = OpenTimestamps (`ots stamp` of the hourly chain head; .ots proofs committed to `ml/ops/witness/`) | Probe from a GitHub runner, `ml/ops/witness_probe.json` 15:31 UTC: a.pool 200, finney 200, b.pool unreachable, client stamp OK. Rekor 200 but needs a signing identity; not used |
+| 2026-11-05 | Hash chain linked by the DATABASE (trigger computes hash, seq, prev, link under an advisory lock) | Application cannot choose chain position; append-only. 24 new PGlite tests (64 total) |
+| 2026-11-05 | Rows stored before the chain existed are committed at activation with `committed_at` = that moment; never shown as witnessed earlier | Brief: never claim pre-existing records were witnessed |
+| 2026-11-05 | Registry source of truth is `ml/models/registry.json` (git-reviewed); weekly retrain appends an entry; DB copy immutable | Current bundle sha256 checked by test |
+| 2026-11-05 | Coverage schedule sched-v1 starts at the first live reference close; no maintenance windows declared | Ledger derived from public tables only |
+| 2026-11-05 | Corrections via GitHub issue template only; resolutions are append-only `corrections` rows | No public form, no spam surface |
+| 2026-11-05 | Demo data note: verifier flags demo receipts whose stored `move` was computed from unrounded prices (live DB enforces 1e-9, so live rows cannot have this). Left as is: demo only | `tools/verify_receipt.py` on mock /r/3 |
+
+Checks run on trust-v2: web vitest 61 passed, tsc clean, lint clean, `next build` OK; ml pytest 55 passed;
+supabase PGlite 64 passed. Smoke test in mock mode: /, /coverage, /models, /r/1, /r/1/evidence all 200.
+
+Not done in phase 2 (next session): WS6 dependence-aware intervals, WS7 calibration by version, WS12 copy pass on
+remaining pages. Concurrent chain writes are protected by an advisory lock but not exercised by a multi-connection test.
+
+## WAITING ON KARTAVYAA
+
+1. **Run in the Supabase SQL editor:** `supabase/migrations/20261105100000_trust_v2.sql` (additive: 4 new tables,
+   triggers, read-only RLS; touches no existing row). Until then the site shows the hash chain and witness as
+   "not configured" and the hourly job skips those steps. After it runs, the next hourly job commits every existing
+   prediction to the chain, stamps the head with OpenTimestamps and registers the model; the home page then shows the
+   exact witnessing activation time. Check: `select count(*) from commitments; select * from witness_receipts;`
