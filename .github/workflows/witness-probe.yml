@@ -1,0 +1,37 @@
+name: witness-probe
+# Which independent timestamp witnesses answer from a GitHub-hosted runner? Writes ml/ops/witness_probe.json.
+on:
+  workflow_dispatch:
+  push:
+    branches: [trust-v2]
+    paths: [.github/workflows/witness-probe.yml]
+permissions: { contents: write }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: |
+          set +e
+          mkdir -p ml/ops
+          d=$(printf 'hopium-witness-probe %s' "$(date -u +%FT%TZ)" | sha256sum | cut -d' ' -f1)
+          echo -n "$d" | xxd -r -p > digest.bin
+          code() { curl -s -o /dev/null -w "%{http_code}" -m 20 "$@" || echo 000; }
+          ots_a=$(code -X POST --data-binary @digest.bin https://a.pool.opentimestamps.org/digest)
+          ots_b=$(code -X POST --data-binary @digest.bin https://b.pool.opentimestamps.org/digest)
+          ots_f=$(code -X POST --data-binary @digest.bin https://finney.calendar.eternitywall.com/digest)
+          rekor=$(code https://rekor.sigstore.dev/api/v1/log)
+          pip install -q opentimestamps-client && echo "$d" > probe.txt && ots stamp probe.txt; client=$?
+          [ -f probe.txt.ots ] && ots info probe.txt.ots | head -20 > ots_info.txt
+          python - <<PY
+          import json; info=open('ots_info.txt').read() if __import__('os').path.exists('ots_info.txt') else ''
+          json.dump({"ran_at":"$(date -u +%FT%TZ)","ots_a_pool":"$ots_a","ots_b_pool":"$ots_b","ots_finney":"$ots_f",
+                     "rekor_log":"$rekor","ots_client_stamp_exit":$client,"ots_info":info},open('ml/ops/witness_probe.json','w'),indent=1)
+          PY
+          cat ml/ops/witness_probe.json
+      - run: |
+          git config user.name "hopium-bot"; git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/ops/witness_probe.json; git commit -m "ops: witness probe" || exit 0
+          git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"
