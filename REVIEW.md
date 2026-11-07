@@ -293,3 +293,20 @@ remaining pages. Concurrent chain writes are protected by an advisory lock but n
    "not configured" and the hourly job skips those steps. After it runs, the next hourly job commits every existing
    prediction to the chain, stamps the head with OpenTimestamps and registers the model; the home page then shows the
    exact witnessing activation time. Check: `select count(*) from commitments; select * from witness_receipts;`
+
+## 2026-11-07 ~21:10 UTC: "chain died after 14:00" investigated; pg_cron made primary
+
+- **Finding: the chain did not die.** Git ops log (`ml/ops/last_predict.json` per commit) shows every candle stored,
+  ids contiguous: 14:00 #166-168, 15:00 #169-171, 16:00 #172-174, 17:00 #178-180, 18:00 #181-183, 19:00 #184-186,
+  20:00 #187-189, 21:00 #190-192, each inserted ~2.5 min after close. Actions: hourly runs #71-#75 all success.
+  Two harmless extras: 16:11 re-run (inserted 0, idempotent) and GitHub's own `schedule` firing 42 min late at
+  20:42 (status `missed`, rejected by the late rule). Site pages are `force-dynamic` with <=60 s fetch cache, so a
+  7.5 h lag cannot come from the site; the "newest #166-168" view was a stale tab/screenshot or a different
+  Supabase project (the only project visible to the Supabase connector, `tppcqtgb...`, is INACTIVE and not HOPIUM).
+  No run-now was triggered: the chain was healthy and a run at 21:10 would only log `missed`.
+- **Primary scheduler is now Supabase pg_cron** (`supabase/migrations/20261107220000_pg_cron_trigger.sql`): HH:01
+  `workflow_dispatch` of hourly.yml, token read from Vault secret `github_dispatch_token` at run time. Heartbeat
+  (HH:02) stays as backup; overlap is absorbed by the `hourly` concurrency group + DB unique key. Supersedes the
+  inline SQL in "external hourly trigger via Supabase pg_cron" above.
+- **OpenTimestamps:** `witness.py` already runs `ots upgrade` on every proof each hour. Checked: 52/54 proofs carry
+  `BitcoinBlockHeaderAttestation`; the 2 pending are the newest (chain-177/180), normal for <~6 h old. No change.
