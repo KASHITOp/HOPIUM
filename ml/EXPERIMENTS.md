@@ -52,3 +52,4 @@ rows whose move exceeded k (leakage gate: > 65% fails).
 | cc0a3a4e | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_short | - | Y | 137 | +0.1% | +3.8% | +6.3% | +8.9% | 0.48 | 54.7% | stage2 C nested tuning |
 | bfe9e314 | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal+fund | long_only | - | - | 241 | -0.2% | -12.9% | -9.3% | -5.5% | -0.73 | 54.0% | stage2 C long-only |
 | 62360f98 | 1h | 1.0% | lgbm | base+flow+mtf+volr+cros+cal | long_short | - | - | 125 | +0.1% | +3.8% | +6.2% | +8.7% | 0.51 | 55.3% | stage2 C no-funding |
+| a2dedaa2 | 12h | 1.0% | logreg | base+flow+mtf+volr+cros+cal+fund | long_short | - | - | 1140 | +0.1% | +57.8% | +93.6% | +137.5% | 0.91 | 54.1% | weekly retrain check |

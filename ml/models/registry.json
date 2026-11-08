@@ -14,6 +14,20 @@
    "change_kind": "initial",
    "change_reason": "First engine-v3 live bundle; config a2dedaa2 chosen by the pre-registered rule (REVIEW.md 2026-11-04). Replaces 1h/4h v2 models, which never published live rows.",
    "research_artifacts": "ml/RESULTS.md, ml/EXPERIMENTS.md, ml/models/engine_v3.json"
+  },
+  {
+   "model_version": "v3-12h-logreg-20261108",
+   "artifact_sha256": "550f64f8b8b2f7104e6f03e85a6fe2a9b4db03965f683fecd4a1e80b1ccb48c3",
+   "artifact_path": "ml/models/engine_v3.pkl",
+   "code_commit": "33d5114d35753bde7865d430d06f171c806deec7",
+   "feature_schema": "features_v3 groups=base+flow+mtf+volreg+cross+cal+fund",
+   "training_period": "all available history through 2026-11-07 19:00:00+00:00",
+   "training_cutoff": "2026-11-07T19:00:00+00:00",
+   "decision_rule": "dec-v3: score=p_big_up-p_big_down; UP if score>threshold, DOWN if score<-threshold, else NO_CALL; threshold 0.16 (fallback: median of 17 walk-forward fold thresholds (protocol found none profitable)), k=0.01",
+   "grading_rule": "grade-v1: direction of move from reference close to close at target_time; |move|<0.1% is FLAT",
+   "change_kind": "retrain_same_procedure",
+   "change_reason": "Scheduled weekly retrain (research/weekly.py)",
+   "research_artifacts": "ml/RESULTS.md, ml/EXPERIMENTS.md, ml/models/engine_v3.json"
   }
  ]
 }
