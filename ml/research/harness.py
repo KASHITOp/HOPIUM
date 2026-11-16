@@ -215,18 +215,29 @@ TUNE_GRID = [dict(num_leaves=7, min_child_samples=600), dict(num_leaves=15, min_
              dict(num_leaves=31, min_child_samples=150)]
 
 
+def purged_split(d: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp, h: int, inner_days: int):
+    """Outer test month [start, end), training window purged so no 12h label crosses into the test month.
+
+    A row at ts carries a label that reads the close at ts + h. The embargo is h + 25 hours, so every training row
+    satisfies ts + h < start - 25h: its label window ends at least 25 hours before the first test row. The same
+    embargo separates the inner fit window from the inner validation window. Returns (train, val, inner, test).
+    """
+    emb = pd.Timedelta(hours=h + 25)
+    test = d[(d.ts >= start) & (d.ts < end)]
+    train = d[d.ts < start - emb]
+    val_start = train.ts.max() - pd.Timedelta(days=inner_days)
+    val = train[train.ts >= val_start]
+    inner = train[train.ts < val_start - emb]
+    return train, val, inner, test
+
+
 def run(cfg: Config, log: bool = True) -> dict:
     t0 = time.time()
     d = dev_frame(cfg.h)
-    emb = pd.Timedelta(hours=cfg.h + 25)
     all_tr, dir_hits, dir_n, folds = [], 0, 0, []
     for m in TEST_MONTHS:
         start, end = m.start_time.tz_localize("UTC"), (m + 1).start_time.tz_localize("UTC")
-        test = d[(d.ts >= start) & (d.ts < end)]
-        train = d[d.ts < start - emb]
-        val_start = train.ts.max() - pd.Timedelta(days=INNER_DAYS)
-        val = train[train.ts >= val_start]
-        inner = train[train.ts < val_start - emb]
+        train, val, inner, test = purged_split(d, start, end, cfg.h, INNER_DAYS)
         # nested choices on inner validation
         params = cfg.lgbm
         if cfg.tune and cfg.model in ("lgbm", "ensemble"):
