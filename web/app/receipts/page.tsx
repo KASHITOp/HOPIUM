@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalibrationChart, LineChart } from "@/components/Charts";
+import { LineChart } from "@/components/Charts";
 import { ModelLabel } from "@/components/Chrome";
 import { JamIcon } from "@/components/Icons";
 import { LocalTime } from "@/components/LocalTime";
@@ -14,7 +14,9 @@ import { summarizeOutcomes } from "@/lib/outcomes";
 import { period } from "@/lib/provenance";
 import { EnvLabel } from "@/components/Trust";
 import { MODE } from "@/lib/data";
-import { calibrationBins, luckSentence, pctCeil, pctFloor } from "@/lib/stats";
+import { Evidence, Probabilities } from "./Evidence";
+import { clusterEpisodes, episodeHitRate } from "@/lib/evidence";
+import { luckSentence, pctCeil, pctFloor } from "@/lib/stats";
 import { hitStreaks, lean, rollingHitRate, tally, wallOfShame } from "@/lib/summary";
 
 export const dynamic = "force-dynamic"; // live data: never serve a build-time snapshot
@@ -39,10 +41,6 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
   const span = period(rows);
   const graded = rows.filter((r) => r.outcome !== null);
   const k = graded.find((r) => r.k !== null)?.k ?? 0.01;
-  const cal = [
-    ...calibrationBins(graded.map((r) => r.p_big_up ?? r.prob_up), graded.map((r) => (r.move ?? 0) > k)).map((b) => ({ ...b, kind: "up" as const })),
-    ...calibrationBins(graded.filter((r) => r.p_big_down !== null).map((r) => r.p_big_down!), graded.filter((r) => r.p_big_down !== null).map((r) => (r.move ?? 0) < -k)).map((b) => ({ ...b, kind: "down" as const })),
-  ];
   const roll = rollingHitRate(rows, 20);
   const firstDue = rows.filter((r) => r.outcome === null).map((r) => r.target_time).sort()[0] ?? null;
   const st = hitStreaks(rows);
@@ -50,6 +48,8 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
   const jams = runs.data.filter((r) => r.job === "predict" && r.status === "missed");
   const jams7 = jams.filter((r) => Date.parse(r.logged_at) > Date.now() - 7 * 86400e3).length;
   const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v && v !== "all") as [string, string][]).toString();
+  const ep = clusterEpisodes(all);
+  const eh = episodeHitRate(ep.episodes, rows);
   const horizons = [...new Set(all.map((r) => r.horizon))];
 
   return (
@@ -99,6 +99,18 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
           <p className="text-[13px]">
             {t.calls ? <>95% Wilson interval {pctFloor(t.ci.lo)} to {pctCeil(t.ci.hi)}, n = {t.calls} ({t.hits} hits, {t.misses} misses)</> : "No graded calls in this selection yet."}
           </p>
+          <div className="mt-4 max-w-lg border-l border-rule pl-4" aria-label="Hit rate by episode">
+            <div className="label">hit rate by episode</div>
+            <div className="display mt-1 text-[44px] text-ink">{eh.n ? pctFloor(eh.rate) : "n/a"}</div>
+            <p className="text-[13px]">
+              {eh.n ? <>95% Wilson interval {pctFloor(eh.lo)} to {pctCeil(eh.hi)}, n = {eh.n} episodes ({eh.hits} hits, {eh.misses} misses; {eh.flat} flat, {eh.pending} pending)</> : "No graded episodes in this selection yet."}
+            </p>
+            <p className="mt-2 text-[12px] leading-5 text-faded">
+              An episode is a run of same-direction calls on one coin whose 12h windows overlap ({eh.calls} calls make {eh.episodes} episodes here).
+              It is graded by its first call only. Per-call counts overstate the evidence: three overlapping UP calls on one rally are one bet
+              on one move, counted three times.
+            </p>
+          </div>
           <p className="mt-3 max-w-lg text-[15px] leading-6 text-ink">{luckSentence(t.hits, t.calls)}</p>
           <dl className="mt-4 grid max-w-lg grid-cols-3 gap-3 text-[12px]">
             <div><dt className="label">direction right</dt><dd className="text-ink">{oc.direction.hits} / {oc.direction.denominator}</dd><dd className="text-faded">excl. {oc.direction.flat} flat</dd></div>
@@ -108,7 +120,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
           <p className="mt-1 text-[12px] text-faded">Excluded everywhere: {oc.excluded.noCall} NO CALL, {oc.excluded.pending} pending. Period (reference closes): {span ? <><LocalTime iso={span.start} /> to <LocalTime iso={span.end} /></> : "none"}. <EnvLabel mode={MODE} /></p>
           <p className="mt-2 max-w-lg text-[12px] leading-5 text-faded">
             Hourly 12h calls overlap and the three coins move together, so these counts are not independent samples; treat the test
-            below as descriptive. That is a one-sided exact binomial test against a 50% coin flip. A small number here means luck is an unlikely
+            above as descriptive. Dependence-aware checks are further down. That is a one-sided exact binomial test against a 50% coin flip. A small number here means luck is an unlikely
             explanation, not that the model makes money: fees take 0.2% from every trade.
           </p>
         </div>
@@ -139,26 +151,17 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
           )}
         </section>
       ) : (
-      <section className="grid gap-8 border-b border-rule py-8 md:grid-cols-[1.5fr_1fr]">
+      <section className="border-b border-rule py-8">
         <div>
           <h2 className="display text-[30px] text-ink">Rolling hit rate</h2>
           <p className="mb-3 text-[12px] text-faded">last 20 graded calls at each point. Dashed line: coin flip.</p>
           <LineChart points={roll} refY={0.5} refLabel="coin flip 50%" label="Rolling hit rate over the last 20 graded calls" />
         </div>
-        <div>
-          <h2 className="display text-[30px] text-ink">Calibration</h2>
-          <p className="mb-3 text-[12px] text-faded">
-            circles: P(big up) vs how often the move beat +{(k * 100).toFixed(0)}%. squares: same for big down. On the dashed line means honest probabilities.
-          </p>
-          {graded.length >= 20 ? (
-            <CalibrationChart bins={cal} label="Calibration of predicted big-move probabilities" />
-          ) : (
-            <p className="text-[13px] text-faded">Needs at least 20 graded predictions (n = {graded.length}).</p>
-          )}
-        </div>
       </section>
 
       )}
+      <Evidence all={all} rows={rows} />
+      <Probabilities all={all} rows={rows} />
       <section className="grid gap-6 border-b border-rule py-8 md:grid-cols-[auto_1fr]" aria-label="Printer jams">
         <JamIcon size={40} className="text-ink" />
         <div>
@@ -189,7 +192,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
             <caption className="sr-only">All receipts in this selection, newest first</caption>
             <thead>
               <tr className="border-y-2 border-ink text-left">
-                {["#", "called", "coin", "h", "call", "lean", "entry", "exit", "move", "after fees", "verdict"].map((h) => (
+                {["#", "episode", "called", "coin", "h", "call", "lean", "entry", "exit", "move", "after fees", "verdict"].map((h) => (
                   <th key={h} scope="col" className="label py-2 pr-3 font-normal">{h}</th>
                 ))}
               </tr>
@@ -198,6 +201,7 @@ export default async function Receipts({ searchParams }: { searchParams: Record<
               {rows.slice(0, 100).map((r) => (
                 <tr key={r.id} className="border-b border-rule">
                   <td className="py-1.5 pr-3"><Link className="ink-link" href={`/r/${r.id}`}>{r.id}</Link></td>
+                  <td className="pr-3 text-faded">{ep.byId.get(r.id) ?? ""}</td>
                   <td className="pr-3"><LocalTime iso={r.candle_close_time} /></td>
                   <td className="pr-3">{r.coin}</td>
                   <td className="pr-3">{r.horizon}</td>

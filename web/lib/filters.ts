@@ -51,8 +51,9 @@ const COLS = ["id", "coin", "horizon", "signal", "prob_up", "p_big_up", "p_big_d
   "candle_close_time", "inserted_at", "target_time", "price_at_target", "move", "outcome", "hit", "graded_at", "model_version",
   "provenance", "job_started_at", "input_cutoff_at", "generated_at", "run_id", "late_rule"] as const;
 
-export function toCsv(rows: Prediction[]): string {
+/** episode_id (rule episode-v1, lib/evidence.ts) is derived, not stored; blank for NO CALL rows. */
+export function toCsv(rows: Prediction[], episodeOf: Map<number, string> = new Map()): string {
   const esc = (v: unknown) => (v === null || v === undefined ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
   // provenance: blank in the database = legacy row; exported as the resolved label so blanks are never read as "live_prospective"
-  return [COLS.join(","), ...rows.map((r) => COLS.map((c) => esc(c === "provenance" ? provenanceOf(r) : r[c])).join(","))].join("\n") + "\n";
+  return [[...COLS, "episode_id"].join(","), ...rows.map((r) => [...COLS.map((c) => esc(c === "provenance" ? provenanceOf(r) : r[c])), esc(episodeOf.get(r.id))].join(","))].join("\n") + "\n";
 }
