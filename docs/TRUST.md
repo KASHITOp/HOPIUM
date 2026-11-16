@@ -113,3 +113,21 @@ fail, a small correct move is FLAT with negative net). Challenges: GitHub issue 
 `.github/ISSUE_TEMPLATE/receipt-correction.yml` (no public form, so no new spam surface). Resolutions are rows in the
 append-only `corrections` table (written by the owner with the service key); originals are never edited and metrics
 keep original grades, with corrections listed beside them.
+
+# Trust v3 (phase 3)
+
+All of it lives in `web/lib/evidence.ts` (pure functions) and is tested in `web/lib/evidence.test.ts`; the purge rule is
+in `ml/research/harness.py purged_split` and tested in `ml/tests/test_purge.py`. Nothing here changes the model, the
+0.16 threshold, a stored grade or the grading rule. Every number is a robustness check printed next to the original.
+
+| Measure | How it is calculated | Limitations | Status |
+|---|---|---|---|
+| Episodes (`episode-v1`) | Per coin, an UP/DOWN call joins the open episode if same direction and its reference close is strictly before the end of the episode's latest 12h window; opposite call closes it; NO CALL does not. Graded by the first call's stored outcome; Wilson 95% interval. `episode_id` = `E<first id>`, clustered over all rows so ids do not change with filters; in the ledger and CSV | Coins are still correlated with each other; a NO CALL gap shorter than 12h does not split an episode | implemented, tested (overlap boundary, chaining, direction change, coin separation, first-call grading, CSV column) |
+| Non-overlapping schedule (`sched-nonoverlap-v1`) | Only calls at 00:00 and 12:00 UTC; rule fixed from the clock, not outcomes | Throws away 11 of 12 hours; coins still co-move | implemented, tested |
+| Block bootstrap | Calls bucketed by reference-close hour (coins together), moving blocks of 24 h, 2000 draws, seed 20261116, percentile 95% interval; for hit rate and mean net per call after 0.2% fees | Block length is a judgement (2x the overlap); needs 30 graded calls, otherwise "insufficient data" | implemented, tested (fixed-seed reproducibility, small-sample refusal) |
+| Baselines | always-UP and prior-only class-frequency, scored on exactly the model's graded calls with the same FLAT rule and fee | Same overlap caveat; class frequency uses only moves graded before the call | implemented, tested |
+| Purge / gap | Training rows satisfy ts + h < test start - 25 h; same embargo between inner fit and inner validation | Embargo assumes hourly rows and h = 12 | implemented (same logic as before, extracted), tested |
+| Reliability | Stored P(big up) / P(big down) vs event (move > +k / < -k), bins 0,5,10,15,20,25,30,40,100%, count per bin; bins under 10 hours are "too few"; chart hidden under 100 graded hours | Overlapping hours; no interval per bin | implemented, tested |
+| Brier vs base rate | mean (p - y)^2; baseline = prior-only share of earlier graded hours with the event; skill = 1 - model/baseline; by model version when that version has 100+ hours | Mixes calibration and resolution, not calibration alone; no interval yet | implemented, tested |
+| Recalibration | None fitted. The live probabilities are reported as stored, so the record stays an untouched test | n/a | by design |
+| Hopium Meter | lean = 0.5 + abs(P(big up) - P(big down)) / 2, not a probability; call iff abs(difference) > 0.16 (lean > 58%), so a visible lean below 58% is NO CALL | n/a | implemented, tested (58% line) |
