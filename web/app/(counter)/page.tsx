@@ -5,7 +5,7 @@ import { EnvLabel, TrustPanel, WalkForwardMethod } from "@/components/Trust";
 import { MODE } from "@/lib/data";
 import { PrinterIcon } from "@/components/Icons";
 import { LocalTime } from "@/components/LocalTime";
-import { Meter } from "@/components/Meter";
+import { Meter, MeterFormula } from "@/components/Meter";
 import { Receipt, ReceiptSkeleton } from "@/components/Receipt";
 import { SitOutPanel, Watched } from "@/components/SitOut";
 import { getChain, getPredictions, getRunLog } from "@/lib/data";
@@ -116,6 +116,7 @@ export default async function Home() {
       {COINS.map((c) => (
         <CoinRow key={c} coin={c} p={latest.get(c)} historic={historic} />
       ))}
+      <div className="border-b border-rule py-4"><MeterFormula threshold={engine.threshold} /></div>
 
       <section className="pt-12" aria-labelledby="feed">
         <div className="flex flex-wrap items-end justify-between gap-3">

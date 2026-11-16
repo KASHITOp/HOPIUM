@@ -4,6 +4,7 @@ import { MonthBars } from "@/components/Charts";
 import { LocalTime } from "@/components/LocalTime";
 import { getModelRuns, getRunLog } from "@/lib/data";
 import engine from "@/lib/engine.json";
+import { MeterFormula } from "@/components/Meter";
 import { signedPct } from "@/lib/format";
 import { WalkForwardMethod } from "@/components/Trust";
 
@@ -52,6 +53,7 @@ export default async function How() {
         {engine.threshold}, DOWN when it is below minus {engine.threshold}, and NO CALL otherwise. The Hopium Meter shows that
         difference as a lean from 50% to 100%; it is not a probability.
       </p>
+      <div className="mt-3"><MeterFormula threshold={engine.threshold} /></div>
       <p className="mt-3">
         Entry is the close of the last finished Binance 1h candle when the call is made. Exit is the close of the candle that
         ends {engine.config.h} hours later. A call is a hit if the price moved its way, and dead money if it moved less than

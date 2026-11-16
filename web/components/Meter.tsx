@@ -1,3 +1,4 @@
+import { METER } from "@/lib/evidence";
 import { meterCopy } from "@/lib/summary";
 
 /**
@@ -38,8 +39,26 @@ export function Meter({ lean, direction, historic, threshold = 0.16 }: { lean: n
         <div className="label">Hopium Meter</div>
         <div className="display mt-1 text-[40px] text-ink">{(lean * 100).toFixed(1)}%</div>
         <div className="text-[11px] text-faded">lean {direction}. not a probability.</div>
-        <p className="mt-2 text-[13px] leading-5 text-ink">{meterCopy(lean, historic)}</p>
+        <p className="mt-2 text-[13px] leading-5 text-ink">{lean > callLine ? meterCopy(lean, historic) : `Below the ${(callLine * 100).toFixed(0)}% call line, so NO CALL whatever the lean says.`}</p>
       </figcaption>
     </figure>
+  );
+}
+
+/** The Meter's formula in words. Shared by the home page and How it works. */
+export function MeterFormula({ threshold }: { threshold: number }) {
+  return (
+    <div className="max-w-3xl text-[12px] leading-5 text-faded">
+      <p>
+        <span className="text-ink">How the Meter is computed.</span> {METER.formula}. It only measures how far apart the two
+        probabilities are, folded so it always reads 50% or more. It is not the chance the call is right: a 60% lean does not
+        mean 60% of those calls hit. How often they actually hit is on the receipts page.
+      </p>
+      <p className="mt-1">
+        The call rule uses the same difference: {METER.callRule(threshold)}. A threshold of {threshold} on the difference is a lean
+        of {(METER.callLean(threshold) * 100).toFixed(0)}% (the dashed call line). Below it the Meter still tips up or down, because
+        one probability is always a little larger, but the call stays NO CALL. Exactly at the line is also NO CALL (the rule is strict).
+      </p>
+    </div>
   );
 }

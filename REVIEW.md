@@ -310,3 +310,27 @@ remaining pages. Concurrent chain writes are protected by an advisory lock but n
   inline SQL in "external hourly trigger via Supabase pg_cron" above.
 - **OpenTimestamps:** `witness.py` already runs `ots upgrade` on every proof each hour. Checked: 52/54 proofs carry
   `BitcoinBlockHeaderAttestation`; the 2 pending are the newest (chain-177/180), normal for <~6 h old. No change.
+
+## Phase 3 (trust-v3), 2026-11-16: WS6 and WS7
+
+| Date (UTC) | Decision | Why / evidence |
+|---|---|---|
+| 2026-11-16 | Episodes chain through the latest member's 12h window, strict `<` at the boundary; NO CALL does not split them | A call 12h later shares no window with the previous one; documented as rule episode-v1 |
+| 2026-11-16 | Non-overlapping schedule = 00:00 and 12:00 UTC only | Fixed from the clock before looking at outcomes |
+| 2026-11-16 | Bootstrap: 24 h moving blocks over calendar hours, coins kept together, 2000 draws, seed 20261116, min 30 graded calls | 2x the 12h overlap; seeded so every visitor sees the same interval |
+| 2026-11-16 | Baselines and Brier base rate are prior-only (use only outcomes graded before the call) | No lookahead in the baseline either |
+| 2026-11-16 | No calibrator fitted on live outcomes | Brief: the live record stays an untouched test |
+| 2026-11-16 | Old calibration chart (no counts, 20-row minimum) replaced by the reliability section (counts per bin, 100-hour minimum) | Small samples now show "insufficient data" |
+| 2026-11-16 | `purged_split` extracted from `run()` with identical logic | So the purge can be tested; no result changes |
+
+Live numbers at build time (production CSV, 783 rows, 2026-11-16 08:0x UTC): per call 75.0% (18 of 24, Wilson 55.1% to
+88.0%); by episode 80.0% (4 of 5 graded episodes, Wilson 37.5% to 96.4%; 33 calls form 9 episodes); 00:00/12:00 only
+2 of 2; bootstrap: insufficient data (24 graded calls, needs 30). Baselines on the same 24 calls: always-UP 15 of 24.
+Brier skill vs prior base rate: P(big up) +0.051, P(big down) +0.006 (735 hours, overlapping).
+
+Checks on trust-v3: web vitest 75 passed, tsc clean, lint clean, `next build` OK (mock mode), mock smoke /, /receipts,
+/how-it-works, /receipts/csv all 200; ml pytest 59 passed. supabase PGlite 64 passed (no SQL changed).
+
+## WAITING ON KARTAVYAA (phase 3)
+
+Nothing. No migrations: episodes and all new statistics are derived from public columns at read time.
