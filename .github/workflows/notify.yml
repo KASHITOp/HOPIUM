@@ -1,0 +1,50 @@
+name: notify
+# Private Discord notifier (ml/hopium/notify.py). Webhook from secret DISCORD_WEBHOOK_URL only; never printed.
+#   watch   sleeps to HH:26, then checks missed slots (deadline HH:25), failures, pg_cron, hash chain, calls, verdicts.
+#           Dispatched by every hourly.yml run; the schedule below is a best-effort backup (GitHub cron runs late).
+#   digest  daily digest at 03:31 UTC (the watch run also sends it if this schedule is skipped)
+#   test    one test message
+on:
+  schedule:
+    - cron: "26 * * * *"
+    - cron: "31 3 * * *"
+  workflow_dispatch:
+    inputs:
+      mode: { description: "watch | digest | test", required: false, default: watch }
+concurrency: { group: "notify-${{ github.event.schedule == '31 3 * * *' && 'digest' || inputs.mode || 'watch' }}", cancel-in-progress: false }
+permissions: { contents: write, actions: read }
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      MODE: ${{ github.event.schedule == '31 3 * * *' && 'digest' || inputs.mode || 'watch' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.SUPABASE_PROJECT_LINK }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ROLE_SERVICE_KEY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q "requests>=2.31"
+      - name: Wait for the HH:25 deadline
+        if: env.MODE == 'watch'
+        run: |
+          m=$((10#$(date -u +%M))); s=$((10#$(date -u +%S)))
+          if [ "$m" -lt 26 ]; then w=$(( (26 - m) * 60 - s )); echo "sleeping ${w}s"; sleep "$w"; fi
+          git pull -q --rebase origin "$GITHUB_REF_NAME"
+      - name: Notify
+        working-directory: ml
+        run: |
+          if [ "$MODE" = watch ]; then cmd=check; else cmd="$MODE"; fi
+          python -m hopium.notify "$cmd"
+      - name: Commit notifier state
+        if: always() && env.MODE != 'test'
+        run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add ml/ops/notify_state.json 2>/dev/null || exit 0
+          git commit -m "ops: notify $MODE $(date -u +%FT%H:%MZ)" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; git rebase --abort 2>/dev/null; sleep $((i*5)); done

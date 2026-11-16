@@ -91,8 +91,8 @@ def main() -> int:
     except Exception as e:
         print("commitments table not available (migration 20261105100000 not applied?); skipping:", str(e)[:200])
         return 0
-    done = {c["prediction_id"] for c in db.select("commitments", {"select": "prediction_id"})}
-    rows = db.select("predictions", {"select": ",".join(FIELDS), "order": "id.asc"})
+    done = {c["prediction_id"] for c in db.select_all("commitments", {"select": "prediction_id", "order": "seq.asc"})}
+    rows = db.select_all("predictions", {"select": ",".join(FIELDS), "order": "id.asc"})
     todo = [r for r in rows if r["id"] not in done]
     for r in todo:
         text = canonical(r)

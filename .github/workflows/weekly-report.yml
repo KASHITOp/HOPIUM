@@ -27,6 +27,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
         working-directory: web
       - name: Generate report
+        id: gen
         working-directory: web
         run: npx vite-node scripts/weekly-report.ts ${{ inputs.week }}
       - name: Commit report
@@ -36,3 +37,10 @@ jobs:
           git add reports
           git commit -m "report: weekly printer report $(ls -t reports/*-*.md | head -1 | xargs basename)" || exit 0
           for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Post report link and LinkedIn caption to Discord (private)
+        working-directory: ml
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: pip install -q "requests>=2.31" && python -m hopium.notify weekly --week "${{ steps.gen.outputs.key }}"

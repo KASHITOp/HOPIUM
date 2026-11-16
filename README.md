@@ -35,6 +35,16 @@ Every Monday 03:31 UTC `.github/workflows/weekly-report.yml` writes the previous
 [`reports/`](reports/); the same numbers, with a share image and a LinkedIn caption, are at
 https://hopium-phi.vercel.app/reports.
 
+## Private Discord notifier
+
+`ml/hopium/notify.py` posts to the owner's Discord through the GitHub secret `DISCORD_WEBHOOK_URL` (never printed; if it
+is missing the jobs skip and say so in the job summary). Alerts: a slot with no stored prediction by HH:25, failed
+predict / grade / OpenTimestamps jobs or hourly steps, a missing pg_cron dispatch (no owner-token hourly run between
+HH:00 and HH:10), and hash-chain verification failures, at most one alert per type per hour, batched. Every UP or DOWN
+call is posted with its receipt link, then its verdict once graded. Daily digest at 03:31 UTC; the weekly report link
+and LinkedIn caption every Monday. Workflows: `hourly.yml` (end of run), `notify.yml` (HH:26 watch, digest, test),
+`weekly-report.yml`.
+
 ## Architecture
 
 ```

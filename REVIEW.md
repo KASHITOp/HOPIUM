@@ -348,3 +348,23 @@ Nothing. No migrations: episodes and all new statistics are derived from public 
 Checks: web vitest 88 passed (13 new: report + badge), tsc clean, lint clean, `next build` OK. Production CSV dry run of 2026-46:
 25 calls, 18 hits / 6 misses / 1 flat, episodes 4 of 5, 476 sat out, coverage 99.4% (one no-job hour, 2026-11-10 09:00),
 REKT #341 ETH DOWN lean 61.8%. Matches the trust-v3 numbers above.
+
+## 2026-11-16 (later): private Discord notifier
+
+| Date (UTC) | Decision | Why / evidence |
+|---|---|---|
+| 2026-11-16 | Notifier in Python (`hopium.notify`), run at the end of every hourly.yml and by notify.yml (watch at HH:26, digest 03:31, test) | Hourly already has DB secrets; the watch is dispatched by each hourly run (reliable) with GitHub cron as backup |
+| 2026-11-16 | Missed slot = no row by HH:25 for any coin (DB rejects inserts > 20 min late, so it cannot still arrive) | User rule |
+| 2026-11-16 | pg_cron failure detected from GitHub: no hourly.yml run triggered by the owner's token in HH:00 to HH:10 | Runs show pg_cron dispatches as KASHITOp at HH:01, heartbeat as github-actions[bot] at HH:02; no SQL needed |
+| 2026-11-16 | State in `ml/ops/notify_state.json`; first run marks everything existing as announced; nothing older than 6 h is ever announced | No floods after downtime or on first install |
+| 2026-11-16 | 1 alert per incident type per hour; held incidents are sent when the hour passes, not dropped | User rule |
+| 2026-11-16 | Webhook only from env; errors print exception class and HTTP status, never the URL (tested) | User rule |
+| 2026-11-16 | Fixed: `commit.py` read predictions/commitments in one request, capped at 1000 rows by Supabase; now `db.select_all` pages | Predictions were ~830 rows: within ~2 days new predictions would silently stop being hash-chained |
+| 2026-11-16 | Digest coverage floored with integer maths | Float floor printed 72/72 as 99.9% (caught by test) |
+
+Checks: ml pytest 71 passed (12 new), web vitest 88, tsc, lint, build OK.
+
+## WAITING ON KARTAVYAA
+
+1. The Discord webhook URL was pasted in chat on 2026-11-16. Treat it as exposed: Discord > channel settings >
+   Integrations > Webhooks > regenerate (or delete and recreate), then update the GitHub secret `DISCORD_WEBHOOK_URL`.

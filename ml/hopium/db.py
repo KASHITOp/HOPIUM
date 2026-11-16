@@ -54,6 +54,17 @@ def select(table, params):
     return _req("GET", table, params=params)
 
 
+def select_all(table, params, page=1000):
+    """GET every matching row. PostgREST/Supabase caps one response at 1000 rows, so read page by page.
+    `params` must include a stable `order`."""
+    out = []
+    while True:
+        rows = _req("GET", table, params={**params, "limit": str(page), "offset": str(len(out))}) or []
+        out.extend(rows)
+        if len(rows) < page:
+            return out
+
+
 def insert(table, rows, on_conflict=None, ignore_duplicates=True):
     params = {"on_conflict": on_conflict} if on_conflict else None
     res = "ignore-duplicates" if ignore_duplicates else "merge-duplicates"

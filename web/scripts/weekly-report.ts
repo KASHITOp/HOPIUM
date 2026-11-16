@@ -5,7 +5,7 @@
  * Same pure functions as the /reports pages, pinned to the same cut-off, so the numbers match.
  * Env: SUPABASE_URL (API URL, dashboard link or bare ref) and SUPABASE_SERVICE_KEY (or SUPABASE_ANON_KEY).
  */
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { buildWeeklyReport, floorPct, latestReportableWeek, parseWeekKey, reportMarkdown, weekRange } from "../lib/report";
 import { liveOnly } from "../lib/provenance";
@@ -57,6 +57,7 @@ async function main() {
     `share images: ${SITE}/reports`, "",
     ...keys.map((k) => `- [${k}](${k}.md)`), "",
   ].join("\n"));
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `key=${key}\n`);
   console.log(JSON.stringify({ key, range: weekRange(r), calls: r.calls, hits: r.hits, misses: r.misses, flat: r.flat, pending: r.pending,
     satOut: r.satOut, episodes: `${r.episodes.hits}/${r.episodes.n}`, coverage: floorPct(r.coverage.pct), outages: r.outages.length, rekt: r.rekt?.id ?? null }));
 }

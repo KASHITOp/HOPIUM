@@ -28,14 +28,17 @@ jobs:
         working-directory: ml
         run: python -m hopium.predict
       - name: Commit new predictions to the hash chain
+        id: commit
         if: always()
         working-directory: ml
         run: python -m hopium.commit
       - name: Witness chain head (OpenTimestamps)
+        id: witness
         if: always()
         working-directory: ml
         run: pip install -q opentimestamps-client && python -m hopium.witness || echo "witness failed (logged, retried next hour)"
       - name: Grade matured predictions
+        id: grade
         if: always()
         working-directory: ml
         run: python -m hopium.grade
@@ -47,15 +50,28 @@ jobs:
         if: always()
         working-directory: ml
         run: python -m hopium.publish_model && python -m hopium.registry
+      - name: Discord notifier (alerts, calls, verdicts; private)
+        if: always()
+        working-directory: ml
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STEP_OUTCOMES: predict=${{ steps.predict.outcome }},commit=${{ steps.commit.outcome }},witness=${{ steps.witness.outcome }},grade=${{ steps.grade.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m hopium.notify check || echo "notifier failed (non-fatal)"
       - name: Commit ops output
         if: always()
         run: |
           git config user.name "hopium-bot"
           git config user.email "hopium-bot@users.noreply.github.com"
-          git add ml/ops/last_predict.json ml/ops/last_grade.json ml/ops/witness 2>/dev/null || true
+          git add ml/ops/last_predict.json ml/ops/last_grade.json ml/ops/witness ml/ops/notify_state.json 2>/dev/null || true
           git commit -m "ops: hourly $(date -u +%FT%H:%MZ)" || exit 0
           for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done
       - name: Watchdog, re-arm the heartbeat chain
         if: always()
         env: { GH_TOKEN: "${{ github.token }}" }
         run: gh workflow run heartbeat.yml -R "${{ github.repository }}" --ref main || echo "heartbeat re-arm failed (non-fatal)"
+      - name: Arm the HH:26 missed-slot watch
+        if: always()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh workflow run notify.yml -R "${{ github.repository }}" --ref main -f mode=watch || echo "watch dispatch failed (non-fatal)"
