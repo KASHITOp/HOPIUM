@@ -17,6 +17,24 @@ days found nothing profitable. Full write-up: [`ml/RESULTS.md`](ml/RESULTS.md).
 |---|---|---|
 | ![Receipts](docs/screenshots/receipts-desktop.png) | ![How it works](docs/screenshots/how-it-works-desktop.png) | ![Phone](docs/screenshots/home-mobile.png) |
 
+## Live badge and weekly reports
+
+[![HOPIUM live badge](https://hopium-phi.vercel.app/badge.svg)](https://hopium-phi.vercel.app/receipts)
+
+Embed it anywhere that renders markdown:
+
+```markdown
+[![HOPIUM live badge](https://hopium-phi.vercel.app/badge.svg)](https://hopium-phi.vercel.app/receipts)
+```
+
+The badge is computed from the live database and cached for at most 1 hour: `live` if a prediction was stored in the last
+2 hours, all-time episode hits out of graded episodes (flat excluded), the published share of the last 24 h of scheduled
+slots (floored), and `Bitcoin-stamped` only if an OpenTimestamps stamp of the hash chain was submitted in the last 26 hours.
+
+Every Monday 03:31 UTC `.github/workflows/weekly-report.yml` writes the previous ISO week's printer report to
+[`reports/`](reports/); the same numbers, with a share image and a LinkedIn caption, are at
+https://hopium-phi.vercel.app/reports.
+
 ## Architecture
 
 ```

@@ -1,0 +1,38 @@
+name: weekly-report
+# Weekly printer report: previous ISO week, snapshot as of Monday 03:31 UTC, committed to reports/.
+# reports/ is outside web/, so this commit does not trigger a Vercel deployment (ignored build step).
+on:
+  schedule:
+    - cron: "31 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      week:
+        description: "ISO week yyyy-ww (empty = latest complete week)"
+        required: false
+        default: ""
+concurrency: { group: weekly-report, cancel-in-progress: false }
+permissions: { contents: write }
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.SUPABASE_PROJECT_LINK }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ROLE_SERVICE_KEY }}
+      SITE_URL: https://hopium-phi.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+        working-directory: web
+      - name: Generate report
+        working-directory: web
+        run: npx vite-node scripts/weekly-report.ts ${{ inputs.week }}
+      - name: Commit report
+        run: |
+          git config user.name "hopium-bot"
+          git config user.email "hopium-bot@users.noreply.github.com"
+          git add reports
+          git commit -m "report: weekly printer report $(ls -t reports/*-*.md | head -1 | xargs basename)" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break; sleep $((i*5)); done

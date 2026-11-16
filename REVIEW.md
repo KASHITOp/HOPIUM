@@ -334,3 +334,17 @@ Checks on trust-v3: web vitest 75 passed, tsc clean, lint clean, `next build` OK
 ## WAITING ON KARTAVYAA (phase 3)
 
 Nothing. No migrations: episodes and all new statistics are derived from public columns at read time.
+
+## 2026-11-16: weekly printer report + live badge
+
+| Date (UTC) | Decision | Why / evidence |
+|---|---|---|
+| 2026-11-16 | Report = ISO week (Mon 00:00 to Mon 00:00 UTC), snapshot as of Monday 03:31 UTC (rule report-v1): rows graded later show as pending | Page, committed markdown and late/re-runs print identical numbers (test: "identical however late it is generated") |
+| 2026-11-16 | /reports pages computed live from the DB, pinned to that cut-off; markdown committed to root `reports/` | `reports/` is outside `web/`, so the weekly commit does not trigger a Vercel deploy (ignored build step) |
+| 2026-11-16 | Episodes counted in the week of their first call; REKT = graded MISS with the highest lean, tie on lowest id | Same rules as /receipts (episode-v1), no re-grading |
+| 2026-11-16 | Data layer reads predictions, run_log, commitments and witness_receipts page by page (1000 rows per request) | Supabase caps a response at 1000 rows; predictions were at ~830 and would have silently lost the oldest rows within days |
+| 2026-11-16 | Badge: live = row stored < 2 h ago; episodes all-time hits/(hits+misses); coverage last 24 h, floored; "Bitcoin-stamped" only if an OTS stamp was submitted < 26 h ago. Cache-Control max-age/s-maxage 3600 (300 on DB error) | Never claim a stamp or coverage that the data does not show |
+
+Checks: web vitest 88 passed (13 new: report + badge), tsc clean, lint clean, `next build` OK. Production CSV dry run of 2026-46:
+25 calls, 18 hits / 6 misses / 1 flat, episodes 4 of 5, 476 sat out, coverage 99.4% (one no-job hour, 2026-11-10 09:00),
+REKT #341 ETH DOWN lean 61.8%. Matches the trust-v3 numbers above.

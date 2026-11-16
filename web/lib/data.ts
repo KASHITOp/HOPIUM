@@ -30,6 +30,21 @@ async function rest<T>(path: string, revalidate = 60): Promise<T> {
   return (await res.json()) as T;
 }
 
+/**
+ * Supabase caps a response at 1000 rows, so long lists are read page by page (stable order required in `path`).
+ * Stops at `limit` rows.
+ */
+async function restAll<T>(path: string, limit: number, revalidate = 60): Promise<T[]> {
+  const PAGE = 1000;
+  const out: T[] = [];
+  for (let offset = 0; offset < limit; offset += PAGE) {
+    const page = await rest<T[]>(`${path}&limit=${Math.min(PAGE, limit - offset)}&offset=${offset}`, revalidate);
+    out.push(...page);
+    if (page.length < Math.min(PAGE, limit - offset)) break;
+  }
+  return out;
+}
+
 async function wrap<T>(live: () => Promise<T>, mock: () => T): Promise<Result<T>> {
   if (MODE === "mock") return { data: mock(), error: null, mode: "mock" };
   try {
@@ -42,7 +57,7 @@ async function wrap<T>(live: () => Promise<T>, mock: () => T): Promise<Result<T>
 /** Newest first. In live mode a failed request returns an EMPTY list plus the error (never mock rows). */
 export async function getPredictions(limit = 5000): Promise<Result<Prediction[]>> {
   const r = await wrap(
-    async () => liveOnly(await rest<Prediction[]>(`predictions?select=*&order=candle_close_time.desc,coin.asc&limit=${limit}`)),
+    async () => liveOnly(await restAll<Prediction>(`predictions?select=*&order=candle_close_time.desc,coin.asc,id.desc`, limit)),
     () => mockData().predictions.slice(0, limit),
   );
   return r.error ? { ...r, data: [] } : r;
@@ -59,7 +74,7 @@ export async function getPrediction(id: number): Promise<Result<Prediction | nul
 export async function getRunLog(days = 30): Promise<Result<RunLog[]>> {
   const since = new Date(Date.now() - days * 86400e3).toISOString();
   const r = await wrap(
-    () => rest<RunLog[]>(`run_log?select=*&logged_at=gte.${since}&order=logged_at.desc&limit=2000`),
+    () => restAll<RunLog>(`run_log?select=*&logged_at=gte.${since}&order=logged_at.desc,id.desc`, 20000),
     () => mockData().runs,
   );
   return r.error ? { ...r, data: [] } : r;
@@ -83,10 +98,16 @@ export async function getModelRuns(): Promise<Result<ModelRun[]>> {
 export async function getChain(): Promise<Result<{ commitments: Commitment[]; witness: WitnessReceipt[] }>> {
   const empty = { commitments: [], witness: [] };
   const r = await wrap(async () => ({
-    commitments: await rest<Commitment[]>(`commitments?select=*&order=seq.asc&limit=100000`),
-    witness: await rest<WitnessReceipt[]>(`witness_receipts?select=*&order=id.asc&limit=100000`),
+    commitments: await restAll<Commitment>(`commitments?select=*&order=seq.asc`, 100000),
+    witness: await restAll<WitnessReceipt>(`witness_receipts?select=*&order=id.asc`, 100000),
   }), () => empty);
   return r.error ? { ...r, data: empty } : r;
+}
+
+/** Witness log only (badge). */
+export async function getWitness(): Promise<Result<WitnessReceipt[]>> {
+  const r = await wrap(() => restAll<WitnessReceipt>(`witness_receipts?select=*&order=id.asc`, 100000), () => []);
+  return r.error ? { ...r, data: [] } : r;
 }
 
 export async function getRegistry(): Promise<Result<ModelEntry[]>> {
