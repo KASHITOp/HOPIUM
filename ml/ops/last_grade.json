@@ -1,48 +1,48 @@
 {
  "job": "grade",
- "at": "2026-11-16T20:02:42.230180+00:00",
+ "at": "2026-11-16T21:02:35.384643+00:00",
  "status": "ok",
  "due": 3,
  "graded": 3,
  "rows": [
   {
-   "id": 1366,
+   "id": 1372,
    "coin": "BTC",
    "horizon": "12h",
    "signal": "NO_CALL",
-   "price_at_call": 64995.12,
-   "price_at_target": 65068.01,
-   "move": 0.00112146881181232,
+   "price_at_call": 64464.95,
+   "price_at_target": 65068.57,
+   "move": 0.00936353786049633,
    "outcome": "SAT_OUT",
    "hit": null,
-   "target_time": "2026-11-16T20:00:00+00:00",
-   "graded_at": "2026-11-16T20:02:40.365476+00:00"
+   "target_time": "2026-11-16T21:00:00+00:00",
+   "graded_at": "2026-11-16T21:02:33.92561+00:00"
   },
   {
-   "id": 1367,
+   "id": 1373,
    "coin": "ETH",
    "horizon": "12h",
    "signal": "NO_CALL",
-   "price_at_call": 1821.5,
-   "price_at_target": 1823.79,
-   "move": 0.00125720559978038,
+   "price_at_call": 1806.06,
+   "price_at_target": 1821.06,
+   "move": 0.00830537191455433,
    "outcome": "SAT_OUT",
    "hit": null,
-   "target_time": "2026-11-16T20:00:00+00:00",
-   "graded_at": "2026-11-16T20:02:41.035678+00:00"
+   "target_time": "2026-11-16T21:00:00+00:00",
+   "graded_at": "2026-11-16T21:02:34.449883+00:00"
   },
   {
-   "id": 1368,
+   "id": 1374,
    "coin": "SOL",
    "horizon": "12h",
    "signal": "NO_CALL",
-   "price_at_call": 71.38,
-   "price_at_target": 71.55,
-   "move": 0.00238161950126088,
+   "price_at_call": 70.87,
+   "price_at_target": 71.41,
+   "move": 0.00761958515591918,
    "outcome": "SAT_OUT",
    "hit": null,
-   "target_time": "2026-11-16T20:00:00+00:00",
-   "graded_at": "2026-11-16T20:02:41.670896+00:00"
+   "target_time": "2026-11-16T21:00:00+00:00",
+   "graded_at": "2026-11-16T21:02:34.90538+00:00"
   }
  ]
 }
