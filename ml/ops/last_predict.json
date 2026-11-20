@@ -1,8 +1,8 @@
 {
  "job": "predict",
- "candle_close_time": "2026-11-20T20:00:00+00:00",
- "started_minutes_after_close": 1.5,
+ "candle_close_time": "2026-11-20T21:00:00+00:00",
+ "started_minutes_after_close": 1.49,
  "dry_run": false,
  "status": "error",
- "detail": "HTTPError('502 Server Error: Bad Gateway for url: https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=BTC-PERPETUAL&start_timestamp=1784318400000&end_timestamp=1786910400000')"
+ "detail": "HTTPError('503 Server Error: Service Unavailable for url: https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=BTC-PERPETUAL&start_timestamp=1784322000000&end_timestamp=1786914000000')"
 }
