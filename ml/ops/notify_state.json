@@ -2,7 +2,12 @@
  "digest_sent_for": "2026-11-20",
  "last_call_id": 2003,
  "last_graded_at": "2026-11-20T05:03:02.957174+00:00",
- "last_sent": {},
- "reported": [],
+ "last_sent": {
+  "failed": 1795204977.4805586
+ },
+ "reported": [
+  "failed:run_log:1435",
+  "failed:step:https://github.com/KASHITOp/HOPIUM/actions/runs/44807472771:predict"
+ ],
  "version": 1
 }
