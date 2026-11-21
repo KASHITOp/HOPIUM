@@ -13,12 +13,17 @@ INSTR = {"BTC": "BTC-PERPETUAL", "ETH": "ETH-PERPETUAL", "SOL": "SOL_USDC-PERPET
 URL = "https://www.deribit.com/api/v2/public/get_funding_rate_history"
 
 
-def funding(coin: str, start: pd.Timestamp, end: pd.Timestamp | None = None) -> pd.DataFrame:
+BACKOFF_S = (3, 6, 12, 24, 45, 60, 90, 120)
+
+
+def funding(coin: str, start: pd.Timestamp, end: pd.Timestamp | None = None, deadline: pd.Timestamp | None = None,
+            sleep=time.sleep, now=lambda: pd.Timestamp.now(tz="UTC")) -> pd.DataFrame:
+    """Retries with backoff until `deadline`; then raises with the real reason. No substitute data, ever."""
     end = end or pd.Timestamp.now(tz="UTC")
     rows, cur = [], start
     while cur < end:
         nxt = min(cur + pd.Timedelta(days=30), end)
-        for i in range(4):
+        for i in range(len(BACKOFF_S) + 1):
             try:
                 r = requests.get(URL, params={"instrument_name": INSTR[coin],
                                               "start_timestamp": int(cur.timestamp() * 1000),
@@ -26,10 +31,12 @@ def funding(coin: str, start: pd.Timestamp, end: pd.Timestamp | None = None) -> 
                 r.raise_for_status()
                 rows += r.json()["result"]
                 break
-            except requests.RequestException:
-                if i == 3:
-                    raise
-                time.sleep(2 ** (i + 1))
+            except requests.RequestException as e:
+                wait = BACKOFF_S[i] if i < len(BACKOFF_S) else None
+                if wait is None or (deadline is not None and now() + pd.Timedelta(seconds=wait) > deadline):
+                    raise RuntimeError(f"Deribit funding unavailable for {coin} after {i + 1} attempts: {e}") from e
+                print(f"  deribit {coin}: {type(e).__name__} {getattr(e.response, 'status_code', '')}, retry in {wait}s")
+                sleep(wait)
         cur = nxt
     df = pd.DataFrame(rows)
     df["ts"] = pd.to_datetime(df.timestamp, unit="ms", utc=True)   # end of the funding hour

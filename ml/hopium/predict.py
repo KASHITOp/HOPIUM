@@ -58,6 +58,9 @@ def write_ops(res: dict):
     OPS.write_text(json.dumps(res, indent=1, default=str))
 
 
+DERIBIT_DEADLINE_MIN = 12  # stop retrying Deribit 12 min after close, leaving time to insert before the 18 min app cutoff
+
+
 def main(dry: bool = False) -> int:
     started = pd.Timestamp.now(tz="UTC")
     close = started.floor("h")
@@ -77,7 +80,8 @@ def main(dry: bool = False) -> int:
         cfg, h = bundle["config"], bundle["config"]["h"]
         candles = fetch_window(close)
         start = close - pd.Timedelta(hours=LOOKBACK_H + 24)
-        funding = {c: deribit.funding(c, start, close) for c in COINS} if "fund" in cfg["groups"] else None
+        deadline = close + pd.Timedelta(minutes=DERIBIT_DEADLINE_MIN)
+        funding = {c: deribit.funding(c, start, close, deadline=deadline) for c in COINS} if "fund" in cfg["groups"] else None
         feats = build_v3(candles, fetch.fear_greed(), funding)
         rows = []
         generated = pd.Timestamp.now(tz="UTC")
@@ -118,10 +122,15 @@ def main(dry: bool = False) -> int:
             print("trust-v1 columns not in database yet; inserting without lifecycle fields")
             res["lifecycle_fields"] = "not stored: migration 20261105000000 not applied"
             out = db.insert("predictions", strip(rows), on_conflict="coin,horizon,candle_close_time")
-        res |= {"status": "ok", "inserted": len(out), "already_existed": len(rows) - len(out),
+        # Never log 'ok' on trust: read back and require one stored row per coin for this hour.
+        stored = db.select("predictions", {"select": "id,coin", "horizon": f"eq.{h}h", "candle_close_time": f"eq.{iso}"}) or []
+        missing = sorted(set(COINS) - {r["coin"] for r in stored})
+        if missing:
+            raise RuntimeError(f"write not stored: no row for {missing} at {iso} after insert (insert returned {len(out)} rows)")
+        res |= {"status": "ok", "inserted": len(out), "already_existed": len(rows) - len(out), "stored_ids": sorted(r["id"] for r in stored),
                 "inserted_minutes_after_close": round(late, 2), "ids": [r["id"] for r in out]}
-        print(f"inserted {len(out)} new rows ({len(rows) - len(out)} already existed)")
-        db.log_run("predict", "ok", iso, f"{len(out)} inserted")
+        print(f"inserted {len(out)} new rows ({len(rows) - len(out)} already existed); verified {len(stored)} stored")
+        db.log_run("predict", "ok", iso, f"{len(out)} inserted, {len(stored)} verified stored", strict=True)
         write_ops(res)
         return 0
     except Exception as e:

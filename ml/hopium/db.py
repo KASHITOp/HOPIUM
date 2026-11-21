@@ -79,7 +79,8 @@ def delete(table, filters):
     return _req("DELETE", table, params=filters, prefer="return=minimal")
 
 
-def log_run(job, status, candle_close_time=None, detail=None):
+def log_run(job, status, candle_close_time=None, detail=None, strict=False):
+    """strict: raise if the log row cannot be written (except the per-hour duplicate guard run_log_predict_once)."""
     if not configured():
         print(f"[run_log] {job} {status} {candle_close_time} {detail}")
         return
@@ -88,5 +89,7 @@ def log_run(job, status, candle_close_time=None, detail=None):
         row["candle_close_time"] = candle_close_time
     try:
         insert("run_log", [row])
-    except Exception as e:  # logging must never mask the real failure
+    except Exception as e:  # in the error path logging must never mask the real failure
         print(f"  could not write run_log: {e}")
+        if strict and "run_log_predict_once" not in str(e):
+            raise

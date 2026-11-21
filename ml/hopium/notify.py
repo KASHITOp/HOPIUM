@@ -124,6 +124,28 @@ def cron_gaps(runs: list[dict] | None, owner: str, now: float, launch: float | N
     return out
 
 
+def site_lag(site_max_id: int | None, db_rows: list[dict], now: float) -> dict[str, dict]:
+    """The public site must show every row stored more than 20 min ago (it reads the same DB, uncached)."""
+    if site_max_id is None:
+        return {}
+    old = [p for p in db_rows if (ts(p["inserted_at"]) or now) < now - 20 * 60]
+    if not old:
+        return {}
+    newest = max(p["id"] for p in old)
+    return {f"site:{newest}": {"site": site_max_id, "db": newest}} if site_max_id < newest else {}
+
+
+def site_max_id() -> int | None:
+    try:
+        r = requests.get(f"{SITE}/receipts/csv", timeout=30)
+        r.raise_for_status()
+        ids = [int(l.split(",", 1)[0]) for l in r.text.splitlines()[1:] if l[:1].isdigit()]
+        return max(ids) if ids else None
+    except Exception as e:
+        print(f"site check skipped: {type(e).__name__}")
+        return None
+
+
 def chain_problems(errs: list[str] | None) -> dict[str, dict]:
     if not errs:
         return {}
@@ -149,6 +171,11 @@ def incident_embeds(new: dict[str, dict]) -> list[dict]:
         embeds.append({"title": "⏰ pg_cron dispatch missing", "color": RED,
                        "description": "No hourly.yml run triggered by the owner token between HH:00 and HH:10. The heartbeat "
                                       "backup may still have covered it; check `cron.job_run_details`.\n" + "\n".join(lines)})
+    if "site" in by:
+        v = by["site"][0]
+        embeds.append({"title": "🪞 Public site is behind the database", "color": RED,
+                       "description": f"Site shows receipts up to #{v['site']}, database has #{v['db']} (stored > 20 min ago). "
+                                      f"Visitors see stale numbers. Check {SITE}/coverage"})
     if "chain" in by:
         v = by["chain"][0]
         embeds.append({"title": "⛓️ Hash chain does not verify", "color": RED,
@@ -398,7 +425,8 @@ def cmd_check(d: Discord, now: float) -> int:
     incidents = {**missed_hours(preds, runs, now, launch),
                  **failures(runs, witness, parse_steps(os.environ.get("STEP_OUTCOMES", "")), os.environ.get("RUN_URL"), now),
                  **cron_gaps(github_runs(now), os.environ.get("GITHUB_REPOSITORY_OWNER", ""), now, launch),
-                 **chain_problems(errs)}
+                 **chain_problems(errs),
+                 **site_lag(site_max_id(), preds, now)}
     state = load_state()
     if state is None:  # first run: everything that already happened counts as announced
         state = empty_state()

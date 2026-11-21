@@ -368,3 +368,17 @@ Checks: ml pytest 71 passed (12 new), web vitest 88, tsc, lint, build OK.
 
 1. The Discord webhook URL was pasted in chat on 2026-11-16. Treat it as exposed: Discord > channel settings >
    Integrations > Webhooks > regenerate (or delete and recreate), then update the GitHub secret `DISCORD_WEBHOOK_URL`.
+
+## Incident 2026-11-20/21: /coverage showed every slot failing, grading "stopped"
+
+- **Root cause:** the site, not the pipeline. Ops files show every hour 03:00 to 01:00 inserted and graded 3 rows, except
+  20:00 and 21:00 (Deribit 502/503, real failures). The site read `predictions` through Next's data cache (constant URL,
+  stale-while-revalidate) but `run_log` fresh (URL contains `now`), so pages mixed a stale predictions snapshot with a
+  fresh run log: "job logged ok but no row" and "pending past target". Fix: every DB read is `cache: "no-store"`.
+- predict now reads its rows back and logs 'ok' only if one row per coin is stored; otherwise it fails with the reason.
+  run_log writes on the ok path are strict (only the per-hour duplicate guard is tolerated). grade fails if an update
+  stores no row (unless another run already graded it).
+- Deribit: backoff 3..120 s, bounded to 12 min after close; then the slot fails with the real reason. No fallback data
+  (none added, so nothing to version or disclose).
+- Notifier: it did alert for 20:00 and 21:00 (state shows both sent). New check: alert when the public site's newest
+  receipt lags the DB by more than 20 min.

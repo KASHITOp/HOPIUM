@@ -25,7 +25,10 @@ export interface Result<T> {
 
 async function rest<T>(path: string, revalidate = 60): Promise<T> {
   if (!URL || !KEY) throw new Error("Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)");
-  const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY }, next: { revalidate: Math.min(revalidate, 60) } });
+  // no-store: a cached copy of one table next to a fresh copy of another produced false "logged ok but no row" and
+  // "pending past target" on /coverage on 2026-11-20 (predictions URL is constant and was served stale for hours).
+  void revalidate;
+  const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY }, cache: "no-store" });
   if (!res.ok) throw new Error(`database said ${res.status}`);
   return (await res.json()) as T;
 }

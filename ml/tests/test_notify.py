@@ -156,3 +156,10 @@ def test_post_batches_embeds_in_tens(monkeypatch):
     assert n.Discord(SECRET).post(None, [{"title": str(i)} for i in range(23)])
     assert [len(b["embeds"]) for b in sent] == [10, 10, 3]
     assert all(b["allowed_mentions"] == {"parse": []} for b in sent)
+
+
+def test_site_lag_alerts_only_for_rows_older_than_20_min():
+    now = T0 + 10 * H
+    rows = [pred(10, "BTC", now - 2 * H), pred(11, "BTC", now - H), pred(12, "BTC", now - 300, inserted_at=n.iso(now - 300))]
+    assert list(n.site_lag(10, rows, now)) == ["site:11"]
+    assert n.site_lag(11, rows, now) == {} and n.site_lag(None, rows, now) == {}
