@@ -1,0 +1,1 @@
+hopium-chain-v1 seq=1281 chain_hash=2243b65d55c4807a726c1fc75f8e907b6811c3b53b23a62d1da94be1474ea99e
