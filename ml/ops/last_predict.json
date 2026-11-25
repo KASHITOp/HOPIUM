@@ -1,7 +1,7 @@
 {
  "job": "predict",
  "candle_close_time": "2026-11-25T11:00:00+00:00",
- "started_minutes_after_close": 1.6,
+ "started_minutes_after_close": 8.23,
  "dry_run": false,
  "rows": [
   {
@@ -19,10 +19,10 @@
    "threshold": 0.16,
    "k": 0.01,
    "provenance": "live_prospective",
-   "job_started_at": "2026-11-25T11:01:35.932874+00:00",
+   "job_started_at": "2026-11-25T11:08:13.510650+00:00",
    "input_cutoff_at": "2026-11-25T11:00:00+00:00",
-   "generated_at": "2026-11-25T11:01:49.352681+00:00",
-   "run_id": "45600430010/1",
+   "generated_at": "2026-11-25T11:08:28.634034+00:00",
+   "run_id": "45601501826/1",
    "late_rule": "late-v1:skip>18m-app/reject>20m-db"
   },
   {
@@ -40,10 +40,10 @@
    "threshold": 0.16,
    "k": 0.01,
    "provenance": "live_prospective",
-   "job_started_at": "2026-11-25T11:01:35.932874+00:00",
+   "job_started_at": "2026-11-25T11:08:13.510650+00:00",
    "input_cutoff_at": "2026-11-25T11:00:00+00:00",
-   "generated_at": "2026-11-25T11:01:49.360074+00:00",
-   "run_id": "45600430010/1",
+   "generated_at": "2026-11-25T11:08:28.646799+00:00",
+   "run_id": "45601501826/1",
    "late_rule": "late-v1:skip>18m-app/reject>20m-db"
   },
   {
@@ -61,25 +61,21 @@
    "threshold": 0.16,
    "k": 0.01,
    "provenance": "live_prospective",
-   "job_started_at": "2026-11-25T11:01:35.932874+00:00",
+   "job_started_at": "2026-11-25T11:08:13.510650+00:00",
    "input_cutoff_at": "2026-11-25T11:00:00+00:00",
-   "generated_at": "2026-11-25T11:01:49.367077+00:00",
-   "run_id": "45600430010/1",
+   "generated_at": "2026-11-25T11:08:28.659059+00:00",
+   "run_id": "45601501826/1",
    "late_rule": "late-v1:skip>18m-app/reject>20m-db"
   }
  ],
  "status": "ok",
- "inserted": 3,
- "already_existed": 0,
+ "inserted": 0,
+ "already_existed": 3,
  "stored_ids": [
   2692,
   2693,
   2694
  ],
- "inserted_minutes_after_close": 1.82,
- "ids": [
-  2692,
-  2693,
-  2694
- ]
+ "inserted_minutes_after_close": 8.48,
+ "ids": []
 }
