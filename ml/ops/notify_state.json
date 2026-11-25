@@ -3,6 +3,7 @@
  "last_call_id": 2577,
  "last_graded_at": "2026-11-25T04:03:26.934002+00:00",
  "last_sent": {
+  "cron": 1795623961.1673925,
   "failed": 1795213560.945985,
   "missed": 1795209975.7213366
  },
@@ -14,7 +15,8 @@
   "failed:run_log:1439",
   "failed:step:https://github.com/KASHITOp/HOPIUM/actions/runs/44816513274:predict",
   "missed:2026-11-20T21:00:00Z",
-  "failed:run_log:1441"
+  "failed:run_log:1441",
+  "cron:2026-11-25T16:00:00Z"
  ],
  "version": 1
 }
