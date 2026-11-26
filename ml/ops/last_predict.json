@@ -1,85 +1,8 @@
 {
  "job": "predict",
  "candle_close_time": "2026-11-26T22:00:00+00:00",
- "started_minutes_after_close": 1.51,
+ "started_minutes_after_close": 52.93,
  "dry_run": false,
- "rows": [
-  {
-   "coin": "BTC",
-   "horizon": "12h",
-   "prob_up": 0.196631,
-   "signal": "NO_CALL",
-   "price_at_call": 60820.77,
-   "candle_close_time": "2026-11-26T22:00:00+00:00",
-   "target_time": "2026-11-27T10:00:00+00:00",
-   "model_version": "v3-12h-logreg-20261122",
-   "p_big_up": 0.196631,
-   "p_big_down": 0.220475,
-   "score": -0.023844,
-   "threshold": 0.16,
-   "k": 0.01,
-   "provenance": "live_prospective",
-   "job_started_at": "2026-11-26T22:01:30.556378+00:00",
-   "input_cutoff_at": "2026-11-26T22:00:00+00:00",
-   "generated_at": "2026-11-26T22:01:46.164675+00:00",
-   "run_id": "45901995700/1",
-   "late_rule": "late-v1:skip>18m-app/reject>20m-db"
-  },
-  {
-   "coin": "ETH",
-   "horizon": "12h",
-   "prob_up": 0.231084,
-   "signal": "NO_CALL",
-   "price_at_call": 1705.12,
-   "candle_close_time": "2026-11-26T22:00:00+00:00",
-   "target_time": "2026-11-27T10:00:00+00:00",
-   "model_version": "v3-12h-logreg-20261122",
-   "p_big_up": 0.231084,
-   "p_big_down": 0.272344,
-   "score": -0.04126,
-   "threshold": 0.16,
-   "k": 0.01,
-   "provenance": "live_prospective",
-   "job_started_at": "2026-11-26T22:01:30.556378+00:00",
-   "input_cutoff_at": "2026-11-26T22:00:00+00:00",
-   "generated_at": "2026-11-26T22:01:46.177199+00:00",
-   "run_id": "45901995700/1",
-   "late_rule": "late-v1:skip>18m-app/reject>20m-db"
-  },
-  {
-   "coin": "SOL",
-   "horizon": "12h",
-   "prob_up": 0.297862,
-   "signal": "NO_CALL",
-   "price_at_call": 71.64,
-   "candle_close_time": "2026-11-26T22:00:00+00:00",
-   "target_time": "2026-11-27T10:00:00+00:00",
-   "model_version": "v3-12h-logreg-20261122",
-   "p_big_up": 0.297862,
-   "p_big_down": 0.274079,
-   "score": 0.023783,
-   "threshold": 0.16,
-   "k": 0.01,
-   "provenance": "live_prospective",
-   "job_started_at": "2026-11-26T22:01:30.556378+00:00",
-   "input_cutoff_at": "2026-11-26T22:00:00+00:00",
-   "generated_at": "2026-11-26T22:01:46.189368+00:00",
-   "run_id": "45901995700/1",
-   "late_rule": "late-v1:skip>18m-app/reject>20m-db"
-  }
- ],
- "status": "ok",
- "inserted": 3,
- "already_existed": 0,
- "stored_ids": [
-  2902,
-  2903,
-  2904
- ],
- "inserted_minutes_after_close": 1.77,
- "ids": [
-  2902,
-  2903,
-  2904
- ]
+ "status": "missed",
+ "detail": "started 52.9 min after candle close; skipped, never backfilled"
 }
