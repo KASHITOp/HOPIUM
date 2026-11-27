@@ -5,7 +5,7 @@
  "last_sent": {
   "cron": 1795623961.1673925,
   "failed": 1795770575.198201,
-  "missed": 1795209975.7213366
+  "missed": 1795771561.3482008
  },
  "reported": [
   "failed:run_log:1435",
@@ -18,7 +18,8 @@
   "failed:run_log:1441",
   "cron:2026-11-25T16:00:00Z",
   "failed:run_log:2093",
-  "failed:step:https://github.com/KASHITOp/HOPIUM/actions/runs/45970189722:predict"
+  "failed:step:https://github.com/KASHITOp/HOPIUM/actions/runs/45970189722:predict",
+  "missed:2026-11-27T09:00:00Z"
  ],
  "version": 1
 }
